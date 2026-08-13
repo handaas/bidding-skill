@@ -1,0 +1,4 @@
+interface:
+  display_name: "标讯大数据报告"
+  short_description: "基于 HandaaS 标讯大数据 MCP，生成中标 / 招标 / 采购统计、拟建项目、招投标参与明细与招投标市场检索的专业 HTML / Markdown / JSON 报告。"
+  default_prompt: "使用 $bidding-report 生成「企业名称」的标讯大数据报告，或用关键词检索招投标市场，产出 HTML + Markdown + JSON 三件套。"
