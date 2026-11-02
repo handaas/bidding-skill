@@ -22,10 +22,9 @@ import argparse
 import datetime as dt
 import json
 import pathlib
-import sys
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-from common import REPORT_BANNER, REPORT_TYPE, json_dumps, load_json_file, print_json
+from common import REPORT_BANNER, REPORT_TYPE, attach_pagination, call_tool_once, collect_detail_pages, json_dumps, load_json_file, paid_call_scope, print_json
 import mcp_client
 from render_report import render_html, render_markdown, html_to_pdf
 
@@ -47,37 +46,71 @@ T_PLANNED = "bid_bigdata_planned_projects"
 
 
 def _is_api_error(value: Any) -> bool:
-    """Detect MCP API error responses (not empty data, but actual failures like 405)."""
+    """Return True for failed MCP/tool envelopes, never for a successful empty result."""
     if value is None:
         return False
     if isinstance(value, str):
-        return any(s in value for s in ("接口调用失败", "查询失败", "状态码：4", "状态码：5"))
+        text = value.strip().lower()
+        return any(marker in text for marker in (
+            "接口调用失败", "查询失败", "状态码：4", "状态码：5",
+            "error executing tool", "validation error", "密钥错误", "鉴权失败",
+        ))
+    if isinstance(value, list):
+        return any(_is_api_error(item) for item in value)
     if isinstance(value, dict):
-        for v in value.values():
-            if isinstance(v, str) and any(s in v for s in ("接口调用失败", "查询失败", "状态码：4", "状态码：5")):
-                return True
+        if value.get("isError") is True or value.get("is_error") is True or value.get("success") is False:
+            return True
+        if value.get("_error") not in (None, "", False) or value.get("error") not in (None, "", False):
+            return True
+        if set(value) <= {"text", "code", "status", "message", "msg"} and value.get("text"):
+            text = str(value.get("text")).strip()
+            if "查询数据为空" in text:
+                return False
+            return True
+        return any(
+            _is_api_error(value.get(key))
+            for key in ("text", "message", "msg", "detail", "content")
+            if key in value
+        )
     return False
 
+
 def _first_list(value: Any) -> List[Any]:
-    if isinstance(value, list):
-        return value
-    if isinstance(value, dict):
-        if _is_api_error(value):
-            return []
-        for key in ("resultList", "list", "items", "data"):
-            if isinstance(value.get(key), list):
-                return value[key]
-    if value in (None, "", {}):
+    """Extract business records without turning envelopes into phantom rows."""
+    if _is_api_error(value):
         return []
-    return [value]
+    if isinstance(value, list):
+        cleaned: List[Any] = []
+        for item in value:
+            if _is_api_error(item) or item in (None, "", {}, []):
+                continue
+            if isinstance(item, dict):
+                business_values = [v for k, v in item.items() if k not in {"total", "count", "code", "message", "msg"}]
+                if business_values and all(v in (None, "", "-", [], {}) for v in business_values):
+                    continue
+            cleaned.append(item)
+        return cleaned
+    if isinstance(value, dict):
+        for key in ("resultList", "storeList", "list", "items", "data", "records"):
+            nested = value.get(key)
+            if isinstance(nested, list):
+                return nested
+        envelope_keys = {
+            "text", "message", "msg", "code", "status", "success", "total", "count",
+            "pageIndex", "pageSize", "isError", "is_error", "content", "structuredContent",
+            "structured_content", "_error", "error",
+        }
+        if set(value) <= envelope_keys:
+            return []
+        if value:
+            return [value]
+    return []
 
 
 def _first_record(value: Any) -> Dict[str, Any]:
     for record in _first_list(value):
-        if isinstance(record, dict):
+        if isinstance(record, dict) and not _is_api_error(record):
             return record
-    if isinstance(value, dict):
-        return value
     return {}
 
 
@@ -103,13 +136,13 @@ def _int(value: Any) -> Optional[int]:
 
 def _safe_call(tool: str, arguments: Dict[str, Any]) -> Any:
     try:
-        result = mcp_client.call_tool(tool, arguments)
+        result = call_tool_once(mcp_client.call_tool, tool, arguments)
         # Detect API error responses (405, etc.) and return error marker
         if _is_api_error(result):
             return {"_error": "API错误", "_raw": result}
         return result
-    except Exception as exc:
-        return {"_error": str(exc)}
+    except Exception:
+        return {"_error": "调用失败"}
 
 
 def _safe_total(payload: Any) -> Any:
@@ -118,6 +151,11 @@ def _safe_total(payload: Any) -> Any:
             return None
         return payload.get("total")
     return None
+
+
+def _failed_tools(sources: Mapping[str, Any]) -> List[str]:
+    """Return only safe tool/dimension labels for failed calls."""
+    return [name for name, payload in sources.items() if _is_api_error(payload)]
 
 
 # --------------------------------------------------------------------------- #
@@ -131,6 +169,15 @@ def resolve_enterprise_name(raw: str) -> Dict[str, Any]:
     if any(suffix in raw for suffix in ("公司", "集团", "有限", "院", "厂", "中心", "事务所", "合作社", "合伙")):
         return {"keyword": raw, "enterprise": raw, "resolved": True, "reason": "视为企业全称"}
     fuzzy = _safe_call(T_FUZZY, {"matchKeyword": raw, "pageSize": 1})
+    fuzzy_total = _int(_safe_total(fuzzy))
+    if fuzzy_total is not None and fuzzy_total > 1:
+        return {
+            "keyword": raw,
+            "enterprise": raw,
+            "resolved": False,
+            "reason": f"模糊查询返回多候选（{fuzzy_total}），未静默选择首条",
+            "fuzzy_total": fuzzy_total,
+        }
     record = _first_record(fuzzy)
     name = str(record.get("name") or "").strip()
     if name:
@@ -190,7 +237,6 @@ def _derive_core_metrics(metrics: List[Dict[str, Any]], core: Mapping[str, Any])
     win_trend = core.get("win_trend", []) if isinstance(core, dict) else []
     customer_top = core.get("customer_top", []) if isinstance(core, dict) else []
     role_dist = core.get("role_dist", []) if isinstance(core, dict) else []
-    info_records = core.get("info_records", []) if isinstance(core, dict) else []
     if isinstance(win_area, list) and win_area:
         metrics.append({"label": "中标地区数", "value": str(len(win_area)), "hint": "中标项目覆盖的地区总数"})
         try:
@@ -281,30 +327,56 @@ def build_subject(raw: str, resolved: Mapping[str, Any], keyword_type: str) -> D
 
 
 def build_caliber(subject: Mapping[str, Any]) -> Dict[str, Any]:
+    products = [item["name"] for item in _requested_product_rows(subject, False)]
     return {
         "match_target": subject.get("enterprise") or subject.get("match_raw"),
         "match_type": f"标讯统计按企业主体匹配（keywordType={subject.get('keywordType', 'name')}）",
-        "data_scope": "中标统计、招标统计、采购统计、拟建项目、招投标参与明细",
-        "products": ["中标信息统计", "招标信息统计", "采购信息统计", "招投标信息", "拟建公告"],
+        "data_scope": "、".join(products),
+        "products": products,
         "limit": "数据来自公开招投标与采购公示；少量项目可能存在录入延迟或信息不全。",
     }
 
 
 def build_caliber_search(search_args: Mapping[str, Any]) -> Dict[str, Any]:
+    filters: Mapping[str, Any] = search_args
+    nested_filters = search_args.get("filters")
+    if isinstance(nested_filters, dict):
+        filters = nested_filters
+    has_amount_filter = any(filters.get(key) not in (None, "") for key in ("biddingProjectMinAmount", "biddingProjectMaxAmount"))
+    amount_limit = (" 已应用金额筛选；明细保留上游返回的项目金额与币种以供复核，但若上游未返回该字段则显示缺失，不能仅凭命中结果验证金额条件。"
+                    if has_amount_filter else "")
     return {
         "match_target": search_args.get("matchKeyword") or "招投标市场（按关键词检索）",
         "match_type": "招投标市场检索（关键词 + 类型/地区/金额/时间）",
         "data_scope": "公开招投标公告（按检索条件命中）",
         "products": ["招投标检索"],
-        "limit": "检索结果取决于关键词与过滤条件；统计范围以本次检索为准。",
+        "limit": "检索结果取决于关键词与过滤条件；统计范围以本次检索为准。" + amount_limit,
     }
 
 
-def build_metrics(win: Mapping[str, Any], tender: Mapping[str, Any], proc: Mapping[str, Any], info_total: Any, planned_total: Any, core: Mapping[str, Any] = None) -> List[Dict[str, Any]]:
+def _requested_product_rows(subject: Mapping[str, Any], search_mode: bool) -> List[Dict[str, str]]:
+    """Keep the source catalog identical to the tools requested by this mode."""
+    if search_mode:
+        return [{"name": "招投标检索", "product_id": "66bf124bf134a4c21b4fc34c"}]
+    reason = str(subject.get("resolve_reason") or "")
+    rows: List[Dict[str, str]] = []
+    if reason and reason not in ("视为企业全称", "关键词为空"):
+        rows.append({"name": "企业模糊查询", "product_id": "675cea1f0e009a9ea37edaa1"})
+    if subject.get("blocked_reason"):
+        return rows
+    rows.extend([
+        {"name": "中标信息统计", "product_id": "6707813f7427e966078e391d"},
+        {"name": "招标信息统计", "product_id": "6707813f7427e966078e392f"},
+        {"name": "采购信息统计", "product_id": "6725e5b9ba65854594baebbc"},
+        {"name": "招投标信息", "product_id": "66bf124bf134a4c21b4fc2fa"},
+        {"name": "拟建公告", "product_id": "66f3d8c064bd2be52d68a134"},
+    ])
+    return rows
+
+
+def build_metrics(win: Mapping[str, Any], tender: Mapping[str, Any], proc: Mapping[str, Any], info_total: Any, planned_total: Any, core: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
     metrics: List[Dict[str, Any]] = []
     core = core or {}
-    info_n = _int(info_total) if info_total is not None else None
-    planned_n = _int(planned_total) if planned_total is not None else None
     metrics.append({"label": "招投标参与记录", "value": (_text(info_total) if info_total is not None else "-"), "hint": "招投标信息条数"})
     metrics.append({"label": "中标标的数", "value": _dist_count(win, "winbidStatList"), "hint": "中标标的分布项数"})
     metrics.append({"label": "招标标的数", "value": _dist_count(tender, "tenderStatList"), "hint": "招标标的分布项数"})
@@ -427,9 +499,9 @@ def build_core_analysis(win: Any, tender: Any, proc: Any, info: Any, planned: An
         {"key": "proc_area", "title": "采购区域分布", "kind": "bar", "note": "按地区统计采购客户数", "chart": {"name": "名称", "value": "数量", "orient": "v"}, "columns": [("地区", "名称"), ("客户数", "数量"), ("占比", "占比")]},
         {"key": "customer_top", "title": "主要客户/采购方", "kind": "bar", "note": "按招投标公告中出现的采购方/客户聚合（出现次数）", "chart": {"name": "客户/采购方", "value": "出现次数", "orient": "h"}, "columns": [("客户/采购方", "客户/采购方"), ("出现次数", "出现次数")]},
         {"key": "role_dist", "title": "角色结构", "kind": "pie", "note": "招标/中标/候选 角色占比", "chart": {"name": "角色", "value": "数量", "donut": True}, "columns": [("角色", "角色"), ("数量", "数量")]},
-        {"key": "info_records", "title": "招投标参与明细", "kind": "table", "note": f"本次命中 {info_total if info_total is not None else '若干'} 条，展示前若干条",
+        {"key": "info_records", "title": "招投标参与明细", "kind": "table", "note": f"本次展示 {len(info_rows)} 条" + (f"；上游总量 {info_total}" if info_total is not None else "；上游未返回总量"),
          "columns": [("公告标题", "公告标题"), ("公告类型", "公告类型"), ("招投标角色", "招投标角色"), ("项目地区", "项目地区"), ("项目金额", "项目金额"), ("公告时间", "公告时间"), ("标的物", "标的物")]},
-        {"key": "planned_records", "title": "拟建项目", "kind": "table", "note": f"本次命中拟建公告 {planned_total if planned_total is not None else '若干'} 条，展示前 N 条",
+        {"key": "planned_records", "title": "拟建项目", "kind": "table", "note": f"本次展示拟建公告 {len(planned_rows)} 条" + (f"；上游总量 {planned_total}" if planned_total is not None else "；上游未返回总量"),
          "columns": [("项目名称", "项目名称"), ("建设地点", "建设地点"), ("发布时间", "发布时间"), ("评审时间", "评审时间"), ("待采设备", "待采设备"), ("项目内容", "项目内容")]},
     ]
 
@@ -455,8 +527,17 @@ def build_core_analysis(win: Any, tender: Any, proc: Any, info: Any, planned: An
 
 
 def _flatten_region(value: Any) -> str:
+    if isinstance(value, str):
+        try:
+            decoded = json.loads(value)
+        except (ValueError, TypeError):
+            decoded = None
+        if isinstance(decoded, (dict, list)):
+            return _flatten_region(decoded)
     if isinstance(value, dict):
-        return " ".join(str(v) for v in value.values() if v)
+        fields = ("country", "province", "city", "district", "county", "address", "value")
+        values = [value[k] for k in fields if k in value] or list(value.values())
+        return " ".join(_flatten_region(v) for v in values if v not in (None, "", [], {}))
     if isinstance(value, list):
         return " ".join(_flatten_region(v) for v in value)
     return _text(value)
@@ -504,14 +585,24 @@ def build_core_analysis_search(search: Any) -> Dict[str, Any]:
             "公告标题": _text(item.get("biddingAnncTitle")) or "-",
             "公告类型": _text(item.get("biddingInfoType")) or "-",
             "项目类型": _text(item.get("biddingProjectType")) or "-",
-            "项目地区": _text(item.get("biddingRegion")) or "-",
+            "项目地区": _flatten_region(item.get("biddingRegion")) or "-",
             "公告时间": _text(item.get("biddingPublishTime")) or "-",
             "截止时间": _text(item.get("biddingEndTime")) or "-",
             "项目编号": _text(item.get("biddingProjectID")) or "-",
+            "项目金额": _format_bid_amount(
+                item.get("projectAmount")
+                or item.get("biddingProjectAmount")
+                or item.get("projectAmountValue")
+            ),
+            "币种": _text(
+                item.get("projectAmountCurrency")
+                or item.get("biddingProjectAmountCurrency")
+                or item.get("currency")
+            ) or "-",
         })
     sections = [
-        {"key": "search_records", "title": "招投标检索明细", "kind": "table", "note": f"本次检索命中 {total if total is not None else '若干'} 条，展示前 {len(rows)} 条",
-         "columns": [("公告标题", "公告标题"), ("公告类型", "公告类型"), ("项目类型", "项目类型"), ("项目地区", "项目地区"), ("公告时间", "公告时间"), ("截止时间", "截止时间"), ("项目编号", "项目编号")]},
+        {"key": "search_records", "title": "招投标检索明细", "kind": "table", "note": f"本次展示 {len(rows)} 条；上游总量为 {total}" if total is not None else f"本次展示 {len(rows)} 条；上游未返回总量",
+         "columns": [("公告标题", "公告标题"), ("公告类型", "公告类型"), ("项目类型", "项目类型"), ("项目地区", "项目地区"), ("项目金额", "项目金额"), ("币种", "币种"), ("公告时间", "公告时间"), ("截止时间", "截止时间"), ("项目编号", "项目编号")]},
     ]
     return {"sections": sections, "search_records": rows}
 
@@ -578,7 +669,7 @@ def _trend_analysis(rows: List[Mapping[str, Any]]) -> Dict[str, Any]:
     return {"peak_period": rows[peak_idx].get("年份", "-"), "peak_value": nums[peak_idx], "direction": direction, "yoy": yoy, "last": nums[-1]}
 
 
-def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: List[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
     insights: List[Dict[str, Any]] = []
     metric_map = {m["label"]: str(m["value"]) for m in metrics}
     info_n = metric_map.get("招投标参与记录")
@@ -674,7 +765,7 @@ def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics:
     return insights
 
 
-def build_abstract(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: List[Mapping[str, Any]]) -> str:
+def build_abstract(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequence[Mapping[str, Any]]) -> str:
     name = subject.get("enterprise") or subject.get("match_raw") or "目标企业"
     parts = [f"本报告以“{name}”为分析对象，基于公开招投标与采购数据，系统呈现企业中标统计、招标统计、采购统计、拟建项目与招投标参与明细。"]
     if metrics:
@@ -712,7 +803,7 @@ def build_dry_run_payload(raw: str, keyword_type: str, search: bool) -> Dict[str
 # Assembly
 # --------------------------------------------------------------------------- #
 
-def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: List[Mapping[str, Any]], *, dry_run: bool, search_mode: bool = False) -> Dict[str, Any]:
+def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequence[Mapping[str, Any]], *, dry_run: bool, search_mode: bool = False, tool_errors: Optional[List[str]] = None) -> Dict[str, Any]:
     abstract = build_abstract(subject, core, metrics) if not search_mode else build_abstract_search(subject, core)
     records = build_records(core)
     insights = build_insights(subject, core, metrics)
@@ -732,6 +823,12 @@ def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: List
         "coverage_pct": round(populated / max(1, total_secs) * 100),
     }
     if populated == 0:
+        if subject.get("blocked_reason"):
+            abstract = f"主体未唯一解析，已停止后续数据产品调用：{subject.get('blocked_reason')}。本报告不包含主体画像或业务结论。"
+        elif tool_errors:
+            abstract = "本次查询未获得有效核心数据，且存在上游调用失败维度：" + "、".join(tool_errors) + "。不据此生成业务规模或市场结论。"
+        else:
+            abstract = "本次查询未返回有效核心数据；报告仅记录查询边界，不生成业务规模或市场结论。"
         import sys
         print("⚠️ 质量门禁警告: 所有核心分析维度均无数据", file=sys.stderr)
     title = f"{subject.get('enterprise') or '招投标市场'} 标讯大数据报告"
@@ -742,7 +839,7 @@ def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: List
         "subject": dict(subject),
         "abstract": abstract,
         "summary": abstract,
-        "executive_summary": [item["interpretation"] for item in insights][:5] or [abstract[:120]],
+        "executive_summary": ((["主体解析受阻：" + str(subject.get("blocked_reason")) + "；已停止主体数据调用。"] if subject.get("blocked_reason") else (["数据缺口：" + "、".join(tool_errors or []) + "未成功返回，本报告仅呈现成功维度。"] if tool_errors else [])) + ([item["interpretation"] for item in insights][:5] or [abstract[:120]])),
         "metrics": list(metrics),
         "caliber": build_caliber(subject) if not search_mode else build_caliber_search(subject),
         "core_analysis": dict(core),
@@ -750,31 +847,37 @@ def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: List
         "insights": insights,
         "data_source": {
             "mcp_server": "bidding-mcp-server",
-            "products": [
-                {"name": "中标信息统计", "product_id": "6707813f7427e966078e391d"},
-                {"name": "招投标信息", "product_id": "66bf124bf134a4c21b4fc2fa"},
-                {"name": "招标信息统计", "product_id": "6707813f7427e966078e392f"},
-                {"name": "采购信息统计", "product_id": "6725e5b9ba65854594baebbc"},
-                {"name": "招投标检索", "product_id": "66bf124bf134a4c21b4fc34c"},
-                {"name": "拟建公告", "product_id": "66f3d8c064bd2be52d68a134"},
-            ],
+            "products": _requested_product_rows(subject, search_mode),
             "generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
             "dry_run": dry_run,
+            "tool_errors": list(tool_errors or []),
+            "blocked_reason": subject.get("blocked_reason"),
             "quality_report": quality_report,
             "search_mode": search_mode,
         },
     }
 
 
-def build_payload(raw: str, keyword_type: str, info_page_size: int, planned_page_size: int) -> Dict[str, Any]:
+@paid_call_scope
+def build_payload(raw: str, keyword_type: str, info_page_size: int, planned_page_size: int, max_pages: int = 1) -> Dict[str, Any]:
+    if isinstance(max_pages, bool) or not isinstance(max_pages, int) or max_pages < 1:
+        raise ValueError("max_pages 必须为正整数")
     resolved = resolve_enterprise_name(raw)
+    if not resolved.get("resolved"):
+        subject = build_subject(raw, resolved, keyword_type)
+        subject["blocked_reason"] = resolved.get("reason") or "企业主体未唯一解析"
+        return _assemble(subject, build_core_analysis({}, {}, {}, {}, {}), [], dry_run=False)
     enterprise = resolved["enterprise"]
     mk_args: Dict[str, Any] = {"matchKeyword": enterprise, "keywordType": keyword_type}
     win = _safe_call(T_WIN_STATS, mk_args)
     tender = _safe_call(T_TENDER_STATS, mk_args)
     proc = _safe_call(T_PROCUREMENT_STATS, mk_args)
-    info = _safe_call(T_BIDDING_INFO, {**mk_args, "pageSize": info_page_size})
-    planned = _safe_call(T_PLANNED, {**mk_args, "pageSize": planned_page_size})
+    info = collect_detail_pages(_safe_call, T_BIDDING_INFO, {**mk_args, "pageSize": info_page_size},
+                                get_rows=_first_list, get_total=_safe_total, is_error=_is_api_error,
+                                max_pages=max_pages)
+    planned = collect_detail_pages(_safe_call, T_PLANNED, {**mk_args, "pageSize": planned_page_size},
+                                   get_rows=_first_list, get_total=_safe_total, is_error=_is_api_error,
+                                   max_pages=max_pages)
     info_total = _safe_total(info) if isinstance(info, dict) else None
     planned_total = _safe_total(planned) if isinstance(planned, dict) else None
 
@@ -784,11 +887,15 @@ def build_payload(raw: str, keyword_type: str, info_page_size: int, planned_page
     _derive_core_metrics(metrics, core if isinstance(core, dict) else {})
     # --- Enterprise profile enrichment (from fuzzy_search) ---
     _enrich_metrics_with_profile(metrics, resolved.get("record") if isinstance(resolved, dict) else None)
-    return _assemble(subject, core, metrics, dry_run=False)
+    # 失败维度只披露安全产品名称，不携带网关错误正文。
+    tool_errors = _failed_tools({"中标信息统计": win, "招标信息统计": tender, "采购信息统计": proc, "招投标参与明细": info, "拟建项目": planned})
+    return attach_pagination(_assemble(subject, core, metrics, dry_run=False, tool_errors=tool_errors),
+                             {"招投标参与明细": info, "拟建项目": planned})
 
 
+@paid_call_scope
 def build_search_payload(args: argparse.Namespace) -> Dict[str, Any]:
-    search_args: Dict[str, Any] = {"matchKeyword": args.search, "pageIndex": 1, "pageSize": args.page_size}
+    search_args: Dict[str, Any] = {"matchKeyword": args.search, "pageSize": args.page_size}
     for opt in ("bidding_type", "bidding_region", "pub_start", "pub_end", "search_mode", "purchasing_type", "min_amount", "max_amount"):
         val = getattr(args, opt, None)
         if val not in (None, ""):
@@ -798,14 +905,17 @@ def build_search_payload(args: argparse.Namespace) -> Dict[str, Any]:
                 "min_amount": "biddingProjectMinAmount", "max_amount": "biddingProjectMaxAmount",
             }[opt]
             search_args[key] = val
-    search = _safe_call(T_BID_SEARCH, search_args)
+    search = collect_detail_pages(_safe_call, T_BID_SEARCH, search_args,
+                                  get_rows=_first_list, get_total=_safe_total, is_error=_is_api_error,
+                                  max_pages=args.max_pages)
     core = build_core_analysis_search(search)
-    subject = {"enterprise": args.search or "招投标市场", "matchKeyword": args.search, "keywordType": "market_search", "match_raw": args.search or "", "resolved": True, "resolve_reason": "市场检索模式"}
+    subject = {"enterprise": args.search or "招投标市场", "matchKeyword": args.search, "keywordType": "market_search", "match_raw": args.search or "", "resolved": True, "resolve_reason": "市场检索模式", "filters": search_args}
     metrics: List[Dict[str, Any]] = []
     total = _safe_total(search)
     if total is not None:
         metrics.append({"label": "检索命中", "value": str(total), "hint": "本次检索命中招投标公告数"})
-    return _assemble(subject, core, metrics, dry_run=False, search_mode=True)
+    return attach_pagination(_assemble(subject, core, metrics, dry_run=False, search_mode=True, tool_errors=_failed_tools({"招投标检索": search})),
+                             {"招投标检索": search})
 
 
 # --------------------------------------------------------------------------- #
@@ -827,6 +937,7 @@ def main() -> None:
     parser.add_argument("--max-amount", type=float, help="项目金额最大值（万）")
     parser.add_argument("--page-size", type=int, default=20, help="明细分页大小（最多 50）；默认 20 以支撑客户/采购方聚合")
     parser.add_argument("--planned-page-size", type=int, default=10, help="拟建项目分页大小")
+    parser.add_argument("--max-pages", type=int, default=1, help="规划的明细付费调用页数上限，默认1；先按 total 估算，只有必要且已授权时提高")
     parser.add_argument("--dry-run", action="store_true", help="不调用真实 MCP，使用样例数据组装报告骨架")
     parser.add_argument("--output", help="输出 JSON 路径；省略则打印到 stdout")
     parser.add_argument("--report-output", help="同时输出 HTML 报告（.html）与 Markdown 报告（.md）")
@@ -837,6 +948,8 @@ def main() -> None:
         raise SystemExit("请提供 --enterprise（企业报告）或 --search（市场检索）")
     if args.enterprise and args.search:
         raise SystemExit("--enterprise 与 --search 互斥，请二选一")
+    if args.max_pages is not None and args.max_pages < 1:
+        raise SystemExit("--max-pages 必须为正整数")
 
     search_mode = bool(args.search) and not args.dry_run
     if args.dry_run:
@@ -844,7 +957,7 @@ def main() -> None:
     elif args.search:
         payload = build_search_payload(args)
     else:
-        payload = build_payload(args.enterprise, args.keyword_type, args.page_size, args.planned_page_size)
+        payload = build_payload(args.enterprise, args.keyword_type, args.page_size, args.planned_page_size, args.max_pages)
 
     if args.output:
         out = pathlib.Path(args.output).expanduser()

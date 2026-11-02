@@ -1,6 +1,6 @@
 ---
 name: bidding-report
-description: Use for generating a professional bidding/tender big-data report (标讯大数据报告) from the HandaaS bidding MCP — covering 中标统计、招标统计、采购统计、拟建项目、招投标参与明细、招投标市场检索. Trigger when users ask for “标讯大数据报告”, “标讯分析报告”, “查一家公司的招投标”, “中标统计”, “招标统计”, “采购统计”, “拟建项目”, “招投标市场检索”, “投标机会”, or “采购分析”. Infer the canonical enterprise name (auto-fuzzy-completing a keyword) or market-search keywords/filters, pick the right MCP tools, and produce HTML + Markdown + JSON reports automatically.
+description: Use for generating a professional bidding/tender big-data report (标讯大数据报告) from the HandaaS bidding MCP — covering 中标统计、招标统计、采购统计、拟建项目、招投标参与明细、招投标市场检索. Trigger when users ask for “标讯大数据报告”, “标讯分析报告”, “查一家公司的招投标”, “中标统计”, “招标统计”, “采购统计”, “拟建项目”, “招投标市场检索”, “投标机会”, or “采购分析”. Infer the canonical enterprise name (auto-fuzzy-completing a keyword) or market-search keywords/filters, pick the right MCP tools, and produce HTML + Markdown + JSON reports automatically. MCP 服务名称触发词：标讯项目动态。
 ---
 
 # 标讯大数据报告
@@ -28,7 +28,23 @@ description: Use for generating a professional bidding/tender big-data report (�
 - 报告所有章节标题、指标卡标签必须用中文；`core_analysis.sections` 的 `title` 字段必须中文，不可显示英文 key（如 `holders`、`investments`）。
 - 指标值必须可读化：金额格式为"X 亿/万 + 币种"，地址拼接省市区，比率显示百分号。详见 `references/report-output.md` 的「数据格式约束」。
 
+## 付费调用纪律（先规划后查询）
+
+每次真实调用均按接口/页计费，必须先规划再查询，不得默认全量拉取：
+
+1. 每一次业务/工具调用、每一页都可能收费。想算 total / 页数不是无限制取全量的授权。
+2. 调用前先推导：需要哪些结论、需要哪些数据维度、工具与参数计划、必要页数与最大调用预算。total 未知时，第一个必要的明细页同时完成 total 发现并直接作为报告数据，绝不为此多付一次（首屏响应必须复用，不重复拉取）。
+3. 优先用统计 / 画像 / 聚合接口回答能回答的问题（中标统计、招标统计、采购统计优先）；明细接口仅取结论、图表、代表性记录或用户明确的全量/计数需求所需的行数。只有用户明确要全面报告时才跑全面管线，绝不因为工具存在就全部调用。
+4. 在 schema 允许范围内用合理的大 pageSize（≤50），取得所需证据 / 样本即停，且不超出显式预算。更多调用必须有“缺失结论”的正当理由，不能只为填满章节。不得用样本分布冒充全量结论。
+5. 复用当前任务 / 报告内的相同请求（含首屏规划数据）；不要为渲染重跑 compose/MCP，用已保存 JSON 本地重渲染。不自动重试、不重复拉取同一统计或明细、不并行独立拉取相同数据。任何补充查询必须先列缺口并复用已返回记录。
+6. `total_pages` / `remaining_pages` 是按请求 pageSize 的估算；短而非空页面仍有剩余记录时在预算内继续。只有稳定有效的 total 等于实际扫描条数才算完整采集；错误、提前空页、重复页、total 变化/缺失、数量溢出均视为不完整。显式预算 / 样本停止即部分采集，绝不宣称全量。
+7. 预算不足以支撑用户要求的关键结论时：先说明证据缺口与预计需要追加的调用数，再请求扩大授权（提高 `--max-pages`）；不静默降级结论，也不擅自扩大计费范围。
+
+分页收集默认一次明细调用预算 `--max-pages 1`（每明细接口）；明细接口的 total、实际取数、完整性披露写入报告 `data_source.pagination`，报告级去重统计写入 `data_source.call_usage`。
+
 ## MCP 服务入口
+
+- MCP 服务当前名称：标讯项目动态（连接仍使用原服务目录标识）。
 
 - 上游 MCP 项目：`handaas-mcp-server/bidding-mcp-server`（位于 `HANDAAS_MCP_SERVER_ROOT` 或本仓库同级目录）。
 - Remote MCP：设置环境变量 `BIDDING_MCP_URL`（streamable-http），可选 `BIDDING_MCP_TOKEN`。
@@ -58,14 +74,14 @@ description: Use for generating a professional bidding/tender big-data report (�
 ### 企业报告模式
 
 1. **解析企业全称**：若输入含“公司/集团/有限/院/厂/中心/事务所/合作社/合伙”等后缀视为全称；否则调 `bid_bigdata_fuzzy_search` 取首个命中。
-2. **调用标讯工具**：`bid_bigdata_bid_win_stats`（中标统计：标的/金额/区域/趋势）、`bid_bigdata_tender_stats`（招标统计）、`bid_bigdata_procurement_stats`（采购统计）、`bid_bigdata_bidding_info`（招投标参与明细）、`bid_bigdata_planned_projects`（拟建项目）。入参为 `matchKeyword`（企业全称）+ `keywordType`。
+2. **调用标讯工具**：`bid_bigdata_bid_win_stats`（中标统计：标的/金额/区域/趋势）、`bid_bigdata_tender_stats`（招标统计）、`bid_bigdata_procurement_stats`（采购统计）、`bid_bigdata_bidding_info`（招投标参与明细，分页，默认 1 页预算）、`bid_bigdata_planned_projects`（拟建项目，分页，默认 1 页预算）。入参为 `matchKeyword`（企业全称）+ `keywordType`；明细按 total 驱动、在 `--max-pages`（默认 1）预算内翻页，超出预算时报告披露未纳入条数而非宣称全量。
 3. **组装统一报告**：核心分析含中标标的/金额/区域分布+趋势、招标标的/金额/区域分布+趋势、采购产品/区域分布、招投标参与明细、拟建项目（每节均为表格）。
 4. **渲染三件套**：`compose_report.py --enterprise ... --output ... --report-output ...` 直接产出 JSON + HTML + Markdown。
 
 ### 市场检索模式
 
 1. **构造检索条件**：`--search <关键词>` + 可选过滤（`--bidding-type` / `--bidding-region` / `--pub-start` / `--pub-end` / `--search-mode` / `--purchasing-type` / `--min-amount` / `--max-amount`）。
-2. **调用 `bid_bigdata_bid_search`**：返回命中公告明细。
+2. **调用 `bid_bigdata_bid_search`**：返回命中公告明细；按 total 驱动、在 `--max-pages`（默认 1）预算内翻页，超出预算时披露未纳入条数。
 3. **组装统一报告**：核心分析为招投标检索明细表。
 4. **渲染三件套**。
 
@@ -104,6 +120,13 @@ python scripts/compose_report.py \
   --min-amount 100 --max-amount 5000 \
   --report-output output/market.html
 
+# 明确授权扩大明细预算（先按 total 估算页数，确认必要后提高）
+python scripts/compose_report.py \
+  --enterprise "示例科技有限公司" \
+  --max-pages 5 \
+  --output output/bidding.json \
+  --report-output output/bidding.html
+
 # 手动调单个工具
 python scripts/mcp_client.py call-tool \
   --tool bid_bigdata_bid_win_stats \
@@ -123,6 +146,6 @@ python scripts/render_report.py --input output/bidding.json --output output/bidd
 - `core_analysis`：中标（标的/金额/区域分布+趋势）、招标（同）、采购（产品/区域分布）、招投标参与明细、拟建项目 / 检索明细（每节均为表格，由 `core_analysis.sections` 驱动）。
 - `representative_records`：代表性招投标记录 Top N。
 - `insights`：结构化解读（招投标活跃度 / 中标标的集中度 / 招标需求方向 / 采购产品结构）。
-- `data_source`：MCP server、数据产品、生成时间、是否 dry-run、是否市场检索模式。
+- `data_source`：MCP server、数据产品、生成时间、是否 dry-run、是否市场检索模式；分页接口的 `pagination`（每接口上游 total / 请求页数 / 取得条数 / 未纳入条数 / 完整性与停止原因）与 `call_usage`（本报告实际执行与复用的请求数）。
 
 若 API 调用失败，明确报出缺失的配置 / 缺失的工具 / MCP 错误 / 参数校验错误 / 上游网络错误，给出 dry-run 命令或配置步骤，绝不暴露密钥。
