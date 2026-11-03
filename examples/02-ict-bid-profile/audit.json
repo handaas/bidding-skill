@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "skill": "bidding-skill",
+  "case_id": "02-ict-bid-profile",
+  "title": "ICT 企业政企标讯画像",
+  "invocation_id": "1793070032490385000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "71e5c8fa777527b906b7f35336c9f88e603eafed5148fa3e44f7f0fb92421fe5",
+    "skill_source_hashes": {
+      "scripts/common.py": "f2c4dfa24498a949618eb190f23a90769ad36e481846a2fcad9ce1b4591f2da0",
+      "scripts/compose_report.py": "509446ef282b3ac1ac260c1ff2d2cca1848ba29e93dab2f22b08f5abebbb793a",
+      "scripts/mcp_client.py": "5e3e1895c56cb9e287220216d86e50a6216bda2ed57e7700c483373677a039dc",
+      "scripts/render_report.py": "48fe6d8896cc504968c6ed9fee42c25206dd818f2bf14ccf97d686a6031cbac6",
+      "scripts/validate_config.py": "8ae07fb3e0f4ddb8f918995ff3e00b12ed0a33aa4f02ac378aaace8fb0d76bf3"
+    },
+    "upstream_source_hashes": {
+      "bidding-mcp-server": "76ed472a6796e09d7ef7098f4b4f8e18f252a033aa0b0642b40a9920bcc0f7b1"
+    },
+    "upstream_dependency_hashes": {
+      "bidding-mcp-server/server/mcp_server.py": "76ed472a6796e09d7ef7098f4b4f8e18f252a033aa0b0642b40a9920bcc0f7b1"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T11:00:32+08:00",
+  "elapsed_seconds": 14.01,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 bidding-skill/scripts/compose_report.py --enterprise '华为技术有限公司' --page-size 10 --planned-page-size 5 --output bidding-skill/output/live-replaced-20261027/02-ict-bid-profile/report.json --report-output bidding-skill/output/live-replaced-20261027/02-ict-bid-profile/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 5,
+  "successful_data_calls": 4,
+  "empty_calls": 1,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 86,
+    "subject": {
+      "enterprise": "华为技术有限公司",
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "match_raw": "华为技术有限公司",
+      "resolved": true,
+      "resolve_reason": "视为企业全称"
+    },
+    "title": "华为技术有限公司 标讯大数据报告",
+    "data_mode": null,
+    "metrics": [
+      {
+        "label": "招投标参与记录",
+        "value": "1000",
+        "hint": "招投标信息条数"
+      },
+      {
+        "label": "中标标的数",
+        "value": "5",
+        "hint": "中标标的分布项数"
+      },
+      {
+        "label": "招标标的数",
+        "value": "5",
+        "hint": "招标标的分布项数"
+      },
+      {
+        "label": "总中标金额",
+        "value": "640.93 万",
+        "hint": "已命中中标/候选公告金额合计"
+      },
+      {
+        "label": "平均单笔金额",
+        "value": "160.23 万",
+        "hint": "中标公告金额均值"
+      },
+      {
+        "label": "主要信息类型",
+        "value": "中标公告（6）",
+        "hint": "采购意向/中标公告等"
+      },
+      {
+        "label": "主要客户/采购方",
+        "value": "9 家",
+        "hint": "公告中出现的采购方去重数"
+      },
+      {
+        "label": "拟建项目",
+        "value": "1005",
+        "hint": "拟建公告条数"
+      },
+      {
+        "label": "中标地区数",
+        "value": "31",
+        "hint": "中标项目覆盖的地区总数"
+      },
+      {
+        "label": "地区CR3",
+        "value": "26.8%",
+        "hint": "前3大中标地区集中度"
+      },
+      {
+        "label": "中标年份跨度",
+        "value": "17",
+        "hint": "有中标记录的年度数"
+      },
+      {
+        "label": "采购方数",
+        "value": "9",
+        "hint": "不同采购方/客户数量"
+      },
+      {
+        "label": "角色类型数",
+        "value": "1",
+        "hint": "招投标中的角色类型数"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 14,
+      "populated_sections": 12,
+      "empty_sections": 2,
+      "coverage_pct": 86
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 5,
+      "offline_scripts": true,
+      "independent_rerender": true,
+      "offline_browser": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "f2c4dfa24498a949618eb190f23a90769ad36e481846a2fcad9ce1b4591f2da0",
+    "scripts/compose_report.py": "509446ef282b3ac1ac260c1ff2d2cca1848ba29e93dab2f22b08f5abebbb793a",
+    "scripts/mcp_client.py": "5e3e1895c56cb9e287220216d86e50a6216bda2ed57e7700c483373677a039dc",
+    "scripts/render_report.py": "48fe6d8896cc504968c6ed9fee42c25206dd818f2bf14ccf97d686a6031cbac6",
+    "scripts/validate_config.py": "8ae07fb3e0f4ddb8f918995ff3e00b12ed0a33aa4f02ac378aaace8fb0d76bf3"
+  },
+  "technical_status": "passed",
+  "audited_at": "2026-10-27T11:12:55+08:00",
+  "evidence_binding": {
+    "report.json": "873b41ddcedee2c4833bf3c6054c1ac64f329cab4e7b07c4f2b6a6857e339fbd",
+    "report.html": "f5f991d719d2ae0c1b5c698e679c50f828415001c611c94950bed730cf641aa0",
+    "report.md": "c320f21a0e76529fd760f666e5272da5d7b67b97a193910b2c56fa8aa8ed7ec1",
+    "calls.json": "ee14dd3987fdd1cf46176deb2155ea97370df3af8b4759b92650b289806e8638",
+    "result.json": "6434b1a44401c6c9c2b44061ff339324d65061d9d512dfc98e665ce1c563a379",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

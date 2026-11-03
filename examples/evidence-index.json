@@ -1,0 +1,77 @@
+{
+  "run_id": "live-replaced-20261027",
+  "cases": [
+    {
+      "skill": "bidding-skill",
+      "id": "01-contractor-bid-profile",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "38e475e6f7ba0b0dd7c76e8cb9361ae5f2488896e676fda89ebd16b6bc72113c",
+        "report.html": "08fb56e9de8e2f8f01cd2005d91dcf86d63378becddc99f0024e2ebe0e4dc26a",
+        "report.md": "2cc830e83c536ee2314338cb9ce8a29228339794584ae32e868aabee1b15356b",
+        "calls.json": "55aaedd127dd8dffaae2f7f771a33eaa920a0ebec02285b24b81fd55e4457284",
+        "result.json": "5d5fb86b6c3154cbc0e5c25237cd6b85e6ae73e48583012f740fe19287fa5dc4",
+        "audit.json": "48fbdba007999398eea08f399a924e835ca55127b487df4a90aa05640184a44c",
+        "acceptance.json": "e982a970508cc9d6f7c1ee96684572ef767010aa38e27c57c4917ffe83168b53",
+        "business-review.json": "feebe37c27911b2ba009d61e72fef3c469c2007166a84ee68559b5365e358867",
+        "browser-check.json": "dd6523e87d50f83c3d7522d4bf8ddb19621e43accda40a6198052776745b412f"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/01-contractor-bid-profile.md"
+    },
+    {
+      "skill": "bidding-skill",
+      "id": "02-ict-bid-profile",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "873b41ddcedee2c4833bf3c6054c1ac64f329cab4e7b07c4f2b6a6857e339fbd",
+        "report.html": "f5f991d719d2ae0c1b5c698e679c50f828415001c611c94950bed730cf641aa0",
+        "report.md": "c320f21a0e76529fd760f666e5272da5d7b67b97a193910b2c56fa8aa8ed7ec1",
+        "calls.json": "ee14dd3987fdd1cf46176deb2155ea97370df3af8b4759b92650b289806e8638",
+        "result.json": "6434b1a44401c6c9c2b44061ff339324d65061d9d512dfc98e665ce1c563a379",
+        "audit.json": "421c0854c0e48b0d26eac5bd0963154c365aea72aa20beb31f2d1708b396b24f",
+        "acceptance.json": "15ea143e660f15f1010330e69775cf539370b6f4c36d851ce462ddd5a3d0dbcf",
+        "business-review.json": "4e5e34beafd531256497e634a1cbb8a3b71611d6ab7c9c380a40165e04292d3a",
+        "browser-check.json": "e133251beb01a0afc9b3ba7bf7ec4ab49cf79784040900abd682661fa52794fa"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/02-ict-bid-profile.md"
+    },
+    {
+      "skill": "bidding-skill",
+      "id": "09-renewable-announcement-monitor",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "d189ab64d37ed5f0df450397f99250b37fe15e2656ddc6eafddb44000203aba9",
+        "report.html": "2c9196bde778812fd81972ac7ef9049edca844423adb92f6c4792b778dd4b935",
+        "report.md": "d7750e53444366fd295f64314bc80d4e96f183e15e8ea9bea99f83c6f46b1cdd",
+        "calls.json": "13805221543c7eb457a539de352c9dc53e897d93ea65c4f8f2848d1f76906ccd",
+        "result.json": "037a4e884fff8552b4e8e087a50e76920a81c9247f16b05d8bf4f9d6859a10ce",
+        "audit.json": "76e4847a744380e44086bd08279a39ca5348afd7f8e8c3b67654ac5e08351f27",
+        "acceptance.json": "7390cc76993dd5b96d8500342ffb51382a482de4c002e168172b769294ea1ad6",
+        "business-review.json": "a922b0e2341276e2893679f21f220b1507f89ee02e7b02397b8df8a8a47702dc",
+        "browser-check.json": "3d793fe9bfd518a2be143694e886f07df308791d9834d24977a881fa7815c5b5"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/09-renewable-announcement-monitor.md"
+    },
+    {
+      "skill": "bidding-skill",
+      "id": "10-ict-planned-project-pipeline",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "28957ca06c1fbc167bb54747e95befe5a361d0df976626f704129263d5fb0637",
+        "report.html": "cd87e715020265bc95629cd9e594b315cea11e8a03f1823f1e72eee197e9d63d",
+        "report.md": "a80137597c46c9518e685862cc6da14fe113f1083c14f8a45bfdc4712941a1b5",
+        "calls.json": "6af83188a23a7363146302a27653fff1ede43a5a08ce79f90c8899733dbd0f40",
+        "result.json": "9853de4f705a9d322b800d324406deffb555b192c8bf946827df2a0db9ff4f29",
+        "audit.json": "2e0af1cbb3ce64f4a6c4b81b0da2147eda7371772d93a47f05718ddd56f4a3e3",
+        "acceptance.json": "a9494c30818b6a8936c94ef978f82d9374cdf1cba8b7d70ede37388a7ffa2e72",
+        "business-review.json": "591af988925c8e6756fddf1c10cd8b1c40b55b107bb2c0c99de6c2710bcb70ad",
+        "browser-check.json": "4d9f15fb3b615754d26cd888b1c16f1d92fde089fa5b75606c10732047325e23"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/10-ict-planned-project-pipeline.md"
+    }
+  ]
+}

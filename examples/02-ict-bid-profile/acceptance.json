@@ -1,0 +1,189 @@
+{
+  "schema_version": 1,
+  "skill": "bidding-skill",
+  "case_id": "02-ict-bid-profile",
+  "title": "ICT 企业政企标讯画像",
+  "invocation_id": "1793070032490385000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "71e5c8fa777527b906b7f35336c9f88e603eafed5148fa3e44f7f0fb92421fe5",
+    "skill_source_hashes": {
+      "scripts/common.py": "f2c4dfa24498a949618eb190f23a90769ad36e481846a2fcad9ce1b4591f2da0",
+      "scripts/compose_report.py": "509446ef282b3ac1ac260c1ff2d2cca1848ba29e93dab2f22b08f5abebbb793a",
+      "scripts/mcp_client.py": "5e3e1895c56cb9e287220216d86e50a6216bda2ed57e7700c483373677a039dc",
+      "scripts/render_report.py": "48fe6d8896cc504968c6ed9fee42c25206dd818f2bf14ccf97d686a6031cbac6",
+      "scripts/validate_config.py": "8ae07fb3e0f4ddb8f918995ff3e00b12ed0a33aa4f02ac378aaace8fb0d76bf3"
+    },
+    "upstream_source_hashes": {
+      "bidding-mcp-server": "76ed472a6796e09d7ef7098f4b4f8e18f252a033aa0b0642b40a9920bcc0f7b1"
+    },
+    "upstream_dependency_hashes": {
+      "bidding-mcp-server/server/mcp_server.py": "76ed472a6796e09d7ef7098f4b4f8e18f252a033aa0b0642b40a9920bcc0f7b1"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T11:00:32+08:00",
+  "elapsed_seconds": 14.01,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 bidding-skill/scripts/compose_report.py --enterprise '华为技术有限公司' --page-size 10 --planned-page-size 5 --output bidding-skill/output/live-replaced-20261027/02-ict-bid-profile/report.json --report-output bidding-skill/output/live-replaced-20261027/02-ict-bid-profile/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 5,
+  "successful_data_calls": 4,
+  "empty_calls": 1,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 86,
+    "subject": {
+      "enterprise": "华为技术有限公司",
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "match_raw": "华为技术有限公司",
+      "resolved": true,
+      "resolve_reason": "视为企业全称"
+    },
+    "title": "华为技术有限公司 标讯大数据报告",
+    "data_mode": null,
+    "metrics": [
+      {
+        "label": "招投标参与记录",
+        "value": "1000",
+        "hint": "招投标信息条数"
+      },
+      {
+        "label": "中标标的数",
+        "value": "5",
+        "hint": "中标标的分布项数"
+      },
+      {
+        "label": "招标标的数",
+        "value": "5",
+        "hint": "招标标的分布项数"
+      },
+      {
+        "label": "总中标金额",
+        "value": "640.93 万",
+        "hint": "已命中中标/候选公告金额合计"
+      },
+      {
+        "label": "平均单笔金额",
+        "value": "160.23 万",
+        "hint": "中标公告金额均值"
+      },
+      {
+        "label": "主要信息类型",
+        "value": "中标公告（6）",
+        "hint": "采购意向/中标公告等"
+      },
+      {
+        "label": "主要客户/采购方",
+        "value": "9 家",
+        "hint": "公告中出现的采购方去重数"
+      },
+      {
+        "label": "拟建项目",
+        "value": "1005",
+        "hint": "拟建公告条数"
+      },
+      {
+        "label": "中标地区数",
+        "value": "31",
+        "hint": "中标项目覆盖的地区总数"
+      },
+      {
+        "label": "地区CR3",
+        "value": "26.8%",
+        "hint": "前3大中标地区集中度"
+      },
+      {
+        "label": "中标年份跨度",
+        "value": "17",
+        "hint": "有中标记录的年度数"
+      },
+      {
+        "label": "采购方数",
+        "value": "9",
+        "hint": "不同采购方/客户数量"
+      },
+      {
+        "label": "角色类型数",
+        "value": "1",
+        "hint": "招投标中的角色类型数"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 14,
+      "populated_sections": 12,
+      "empty_sections": 2,
+      "coverage_pct": 86
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 5,
+      "offline_scripts": true,
+      "independent_rerender": true,
+      "offline_browser": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "f2c4dfa24498a949618eb190f23a90769ad36e481846a2fcad9ce1b4591f2da0",
+    "scripts/compose_report.py": "509446ef282b3ac1ac260c1ff2d2cca1848ba29e93dab2f22b08f5abebbb793a",
+    "scripts/mcp_client.py": "5e3e1895c56cb9e287220216d86e50a6216bda2ed57e7700c483373677a039dc",
+    "scripts/render_report.py": "48fe6d8896cc504968c6ed9fee42c25206dd818f2bf14ccf97d686a6031cbac6",
+    "scripts/validate_config.py": "8ae07fb3e0f4ddb8f918995ff3e00b12ed0a33aa4f02ac378aaace8fb0d76bf3"
+  },
+  "technical_status": "passed",
+  "audited_at": "2026-10-27T11:12:55+08:00",
+  "evidence_binding": {
+    "report.json": "873b41ddcedee2c4833bf3c6054c1ac64f329cab4e7b07c4f2b6a6857e339fbd",
+    "report.html": "f5f991d719d2ae0c1b5c698e679c50f828415001c611c94950bed730cf641aa0",
+    "report.md": "c320f21a0e76529fd760f666e5272da5d7b67b97a193910b2c56fa8aa8ed7ec1",
+    "calls.json": "ee14dd3987fdd1cf46176deb2155ea97370df3af8b4759b92650b289806e8638",
+    "result.json": "6434b1a44401c6c9c2b44061ff339324d65061d9d512dfc98e665ce1c563a379",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  },
+  "business_review": {
+    "id": "02-ict-bid-profile",
+    "verdict": "acceptable",
+    "summary": "当前真实产物逐项复核通过；结论限于本次上游公开样本与报告声明口径。",
+    "checks": [
+      {
+        "expectation": "主体按企业名称查询",
+        "status": "pass",
+        "evidence": "已证明“主体按企业名称查询”。 实际调用=[{\"tool\":\"bid_bigdata_bid_win_stats\",\"status\":\"data\",\"row_count\":null,\"reported_total\":null,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\"}},{\"tool\":\"bid_bigdata_tender_stats\",\"status\":\"data\",\"row_count\":null,\"reported_total\":null,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\"}},{\"tool\":\"bid_bigdata_procurement_stats\",\"status\":\"empty\",\"row_count\":null,\"reported_total\":null,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\"}},{\"tool\":\"bid_bigdata_bidding_info\",\"status\":\"data\",\"row_count\":10,\"reported_total\":1000,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\",\"pageSize\":10}},{\"tool\":\"bid_bigdata_planned_projects\",\"status\":\"data\",\"row_count\":5,\"reported_total\":1005,\"… subject={\"enterprise\":\"华为技术有限公司\",\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\",\"match_raw\":\"华为技术有限公司\",\"resolved\":true,\"resolve_reason\":\"视为企业全称\"} 口径={\"match_target\":\"华为技术有限公司\",\"match_type\":\"标讯统计按企业主体匹配（keywordType=name）\",\"data_scope\":\"中标信息统计、招标信息统计、采购信息统计、招投标信息、拟建公告\",\"products\":[\"中标信息统计\",\"招标信息统计\",\"采购信息统计\",\"招投标信息\",\"拟建公告\"],\"limit\":\"数据来自公开招投标与采购公示；少量项目可能存在录入延迟或信息不全。\"} 实际记录样本={\"win_subject\":[{\"名称\":\"扩容工程\",\"数量\":\"77\",\"占比\":\"1.07\"},{\"名称\":\"交换机\",\"数量\":\"65\",\"占比\":\"0.9\"}],\"win_amount\":[{\"名称\":\"10万以下\",\"数量\":\"125\",\"占比\":\"7.84\"},{\"名称\":\"10万~50万\",\"数量\":\"187\",\"占比\":\"11.72\"}],\"win_area\":[{\"名称\":\"北京\",\"数量\":\"878\",\"占比\":\"-\"},{\"名称\":\"山西省\",\"数量\":\"211\",\"占比\":\"-\"}],\"win_trend\":[{\"年份\":\"2026\",\"数量\":\"397\"},{\"年份\":\"2025\",\"数量\":\"587\"}],\"tender_subject\":[{\"名称\":\"研发装备提升\",\"数量\":\"39\",\"占比\":\"15.54\"},{\"名称\":\"无线产品研发\",\"数量\":\"35\",\"占比\":\"13.94\"}],\"tender_amount\":[{\"名称\":\"10万以下\",\"数量\":\"14\",\"占比\":\"10.37\"},{\"名称\":\"10万~50万\",\"数量\":\"12\",\"占比\":\"8.89\"}],\"tender_area\":[{\"名称\":\"河南省\",\"数量\":\"1\",\"占比\":\"-\"},{\"名称\":\"宁夏回族自治区\",\"数量\":\"1\",\"占比\":\"-\"}],\"tender_trend\":[{\"年份\":\"2026\",\"数量\":\"18\"},{\"年份\":\"2025\",\"数量\":\"17\"}],\"customer_top\":[{\"客户/采购方\":\"中国铁塔湖南省分公司\",\"出现次数\":1},{\"客户/采购方\":\"中国移动通信集团上海有限公司\",\"出现次数\":1}],\"role_dist\":[{\"角色\":\"中标\",\"数量\":10}],\"info_type_dist\":[{\"信息类型\":\"中标公告\",\"数量\":6},{\"信息类型\":\"采购意向\",\"数量\":3}],\"info_records\":[{\"公告标题\":\"中国移动内蒙古公司2024年XC云一二期工程云平台软件及集成服务采购项目_中标结果公示\",\"公告类型\":\"中标公告\",\"招投标角色\":\"中标\",\"项目地区\":\"内蒙古自治区\",\"项目金额\":\"-\",\"公告时间\":\"2024-12-06\",\"标的物\":\"\"},{\"公告标题\":\"中国铁塔湖南省分公司黔张常铁路湖南段公网通信覆盖工程POI、合路器、天线材料采购项目-中标候选人公示\",\"公告类型\":\"中标公告\",\"招投标角色\":\"中标\",\"项目地区\":\"湖南省 长沙市\",\"项目金额\":\"201.48 万元\",\"公告时间\":\"2019-04-18\",\"标的物\":\"POI、合路器、天线材料、公网通信覆盖工程\"}],\"planned_records\":[{\"项… 可见章节=[{\"title\":\"中标标的分布\",\"note\":\"按标的物统计中标数量与占比\"},{\"title\":\"中标金额分布\",\"note\":\"按金额区间统计中标占比\"},{\"title\":\"中标区域分布\",\"note\":\"按区域统计中标数量\"},{\"title\":\"中标趋势\",\"note\":\"按年度统计中标数量\"},{\"title\":\"招标标的分布\",\"note\":\"按标的物统计招标数量与占比\"},{\"title\":\"招标金额分布\",\"note\":\"按金额区间统计招标占比\"},{\"title\":\"招标区域分布\",\"note\":\"按区域统计招标数量\"},{\"title\":\"招标趋势\",\"note\":\"按年度统计招标数量\"},{\"title\":\"采购产品分布\",\"note\":\"按产品统计采购数量与占比\"},{\"title\":\"采购区域分布\",\"note\":\"按地区统计采购客户数\"},{\"title\":\"主要客户/采购方\",\"note\":\"按招投标公告中出现的采购方/客户聚合（出现次数）\"},{\"title\":\"角色结构\",\"note\":\"招标/中标/候选 角色占比\"},{\"title\":\"招投标参与明细\",\"note\":\"本次展示 10 条；上游总量 1000\"},{\"title\":\"拟建项目\",\"note\":\"本次展示拟建公告 5 条；上游总量 1005\"}]"
+      },
+      {
+        "expectation": "中标与招标统计同明细口径分开呈现",
+        "status": "pass",
+        "evidence": "已证明“中标与招标统计同明细口径分开呈现”。 实际调用=[{\"tool\":\"bid_bigdata_bid_win_stats\",\"status\":\"data\",\"row_count\":null,\"reported_total\":null,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\"}},{\"tool\":\"bid_bigdata_tender_stats\",\"status\":\"data\",\"row_count\":null,\"reported_total\":null,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\"}},{\"tool\":\"bid_bigdata_procurement_stats\",\"status\":\"empty\",\"row_count\":null,\"reported_total\":null,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\"}},{\"tool\":\"bid_bigdata_bidding_info\",\"status\":\"data\",\"row_count\":10,\"reported_total\":1000,\"arguments\":{\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\",\"pageSize\":10}},{\"tool\":\"bid_bigdata_planned_projects\",\"status\":\"data\",\"row_count\":5,\"reported_total\":1005,\"… subject={\"enterprise\":\"华为技术有限公司\",\"matchKeyword\":\"华为技术有限公司\",\"keywordType\":\"name\",\"match_raw\":\"华为技术有限公司\",\"resolved\":true,\"resolve_reason\":\"视为企业全称\"} 口径={\"match_target\":\"华为技术有限公司\",\"match_type\":\"标讯统计按企业主体匹配（keywordType=name）\",\"data_scope\":\"中标信息统计、招标信息统计、采购信息统计、招投标信息、拟建公告\",\"products\":[\"中标信息统计\",\"招标信息统计\",\"采购信息统计\",\"招投标信息\",\"拟建公告\"],\"limit\":\"数据来自公开招投标与采购公示；少量项目可能存在录入延迟或信息不全。\"} 实际记录样本={\"win_subject\":[{\"名称\":\"扩容工程\",\"数量\":\"77\",\"占比\":\"1.07\"},{\"名称\":\"交换机\",\"数量\":\"65\",\"占比\":\"0.9\"}],\"win_amount\":[{\"名称\":\"10万以下\",\"数量\":\"125\",\"占比\":\"7.84\"},{\"名称\":\"10万~50万\",\"数量\":\"187\",\"占比\":\"11.72\"}],\"win_area\":[{\"名称\":\"北京\",\"数量\":\"878\",\"占比\":\"-\"},{\"名称\":\"山西省\",\"数量\":\"211\",\"占比\":\"-\"}],\"win_trend\":[{\"年份\":\"2026\",\"数量\":\"397\"},{\"年份\":\"2025\",\"数量\":\"587\"}],\"tender_subject\":[{\"名称\":\"研发装备提升\",\"数量\":\"39\",\"占比\":\"15.54\"},{\"名称\":\"无线产品研发\",\"数量\":\"35\",\"占比\":\"13.94\"}],\"tender_amount\":[{\"名称\":\"10万以下\",\"数量\":\"14\",\"占比\":\"10.37\"},{\"名称\":\"10万~50万\",\"数量\":\"12\",\"占比\":\"8.89\"}],\"tender_area\":[{\"名称\":\"河南省\",\"数量\":\"1\",\"占比\":\"-\"},{\"名称\":\"宁夏回族自治区\",\"数量\":\"1\",\"占比\":\"-\"}],\"tender_trend\":[{\"年份\":\"2026\",\"数量\":\"18\"},{\"年份\":\"2025\",\"数量\":\"17\"}],\"customer_top\":[{\"客户/采购方\":\"中国铁塔湖南省分公司\",\"出现次数\":1},{\"客户/采购方\":\"中国移动通信集团上海有限公司\",\"出现次数\":1}],\"role_dist\":[{\"角色\":\"中标\",\"数量\":10}],\"info_type_dist\":[{\"信息类型\":\"中标公告\",\"数量\":6},{\"信息类型\":\"采购意向\",\"数量\":3}],\"info_records\":[{\"公告标题\":\"中国移动内蒙古公司2024年XC云一二期工程云平台软件及集成服务采购项目_中标结果公示\",\"公告类型\":\"中标公告\",\"招投标角色\":\"中标\",\"项目地区\":\"内蒙古自治区\",\"项目金额\":\"-\",\"公告时间\":\"2024-12-06\",\"标的物\":\"\"},{\"公告标题\":\"中国铁塔湖南省分公司黔张常铁路湖南段公网通信覆盖工程POI、合路器、天线材料采购项目-中标候选人公示\",\"公告类型\":\"中标公告\",\"招投标角色\":\"中标\",\"项目地区\":\"湖南省 长沙市\",\"项目金额\":\"201.48 万元\",\"公告时间\":\"2019-04-18\",\"标的物\":\"POI、合路器、天线材料、公网通信覆盖工程\"}],\"planned_records\":[{\"项… 可见章节=[{\"title\":\"中标标的分布\",\"note\":\"按标的物统计中标数量与占比\"},{\"title\":\"中标金额分布\",\"note\":\"按金额区间统计中标占比\"},{\"title\":\"中标区域分布\",\"note\":\"按区域统计中标数量\"},{\"title\":\"中标趋势\",\"note\":\"按年度统计中标数量\"},{\"title\":\"招标标的分布\",\"note\":\"按标的物统计招标数量与占比\"},{\"title\":\"招标金额分布\",\"note\":\"按金额区间统计招标占比\"},{\"title\":\"招标区域分布\",\"note\":\"按区域统计招标数量\"},{\"title\":\"招标趋势\",\"note\":\"按年度统计招标数量\"},{\"title\":\"采购产品分布\",\"note\":\"按产品统计采购数量与占比\"},{\"title\":\"采购区域分布\",\"note\":\"按地区统计采购客户数\"},{\"title\":\"主要客户/采购方\",\"note\":\"按招投标公告中出现的采购方/客户聚合（出现次数）\"},{\"title\":\"角色结构\",\"note\":\"招标/中标/候选 角色占比\"},{\"title\":\"招投标参与明细\",\"note\":\"本次展示 10 条；上游总量 1000\"},{\"title\":\"拟建项目\",\"note\":\"本次展示拟建公告 5 条；上游总量 1005\"}]"
+      },
+      {
+        "expectation": "检查主要区域、标的及金额是否有证据",
+        "status": "pass",
+        "evidence": "已证明“检查主要区域、标的及金额是否有证据”。 实际记录样本={\"win_subject\":[{\"名称\":\"扩容工程\",\"数量\":\"77\",\"占比\":\"1.07\"},{\"名称\":\"交换机\",\"数量\":\"65\",\"占比\":\"0.9\"}],\"win_amount\":[{\"名称\":\"10万以下\",\"数量\":\"125\",\"占比\":\"7.84\"},{\"名称\":\"10万~50万\",\"数量\":\"187\",\"占比\":\"11.72\"}],\"win_area\":[{\"名称\":\"北京\",\"数量\":\"878\",\"占比\":\"-\"},{\"名称\":\"山西省\",\"数量\":\"211\",\"占比\":\"-\"}],\"win_trend\":[{\"年份\":\"2026\",\"数量\":\"397\"},{\"年份\":\"2025\",\"数量\":\"587\"}],\"tender_subject\":[{\"名称\":\"研发装备提升\",\"数量\":\"39\",\"占比\":\"15.54\"},{\"名称\":\"无线产品研发\",\"数量\":\"35\",\"占比\":\"13.94\"}],\"tender_amount\":[{\"名称\":\"10万以下\",\"数量\":\"14\",\"占比\":\"10.37\"},{\"名称\":\"10万~50万\",\"数量\":\"12\",\"占比\":\"8.89\"}],\"tender_area\":[{\"名称\":\"河南省\",\"数量\":\"1\",\"占比\":\"-\"},{\"名称\":\"宁夏回族自治区\",\"数量\":\"1\",\"占比\":\"-\"}],\"tender_trend\":[{\"年份\":\"2026\",\"数量\":\"18\"},{\"年份\":\"2025\",\"数量\":\"17\"}],\"customer_top\":[{\"客户/采购方\":\"中国铁塔湖南省分公司\",\"出现次数\":1},{\"客户/采购方\":\"中国移动通信集团上海有限公司\",\"出现次数\":1}],\"role_dist\":[{\"角色\":\"中标\",\"数量\":10}],\"info_type_dist\":[{\"信息类型\":\"中标公告\",\"数量\":6},{\"信息类型\":\"采购意向\",\"数量\":3}],\"info_records\":[{\"公告标题\":\"中国移动内蒙古公司2024年XC云一二期工程云平台软件及集成服务采购项目_中标结果公示\",\"公告类型\":\"中标公告\",\"招投标角色\":\"中标\",\"项目地区\":\"内蒙古自治区\",\"项目金额\":\"-\",\"公告时间\":\"2024-12-06\",\"标的物\":\"\"},{\"公告标题\":\"中国铁塔湖南省分公司黔张常铁路湖南段公网通信覆盖工程POI、合路器、天线材料采购项目-中标候选人公示\",\"公告类型\":\"中标公告\",\"招投标角色\":\"中标\",\"项目地区\":\"湖南省 长沙市\",\"项目金额\":\"201.48 万元\",\"公告时间\":\"2019-04-18\",\"标的物\":\"POI、合路器、天线材料、公网通信覆盖工程\"}],\"planned_records\":[{\"项… 可见章节=[{\"title\":\"中标标的分布\",\"note\":\"按标的物统计中标数量与占比\"},{\"title\":\"中标金额分布\",\"note\":\"按金额区间统计中标占比\"},{\"title\":\"中标区域分布\",\"note\":\"按区域统计中标数量\"},{\"title\":\"中标趋势\",\"note\":\"按年度统计中标数量\"},{\"title\":\"招标标的分布\",\"note\":\"按标的物统计招标数量与占比\"},{\"title\":\"招标金额分布\",\"note\":\"按金额区间统计招标占比\"},{\"title\":\"招标区域分布\",\"note\":\"按区域统计招标数量\"},{\"title\":\"招标趋势\",\"note\":\"按年度统计招标数量\"},{\"title\":\"采购产品分布\",\"note\":\"按产品统计采购数量与占比\"},{\"title\":\"采购区域分布\",\"note\":\"按地区统计采购客户数\"},{\"title\":\"主要客户/采购方\",\"note\":\"按招投标公告中出现的采购方/客户聚合（出现次数）\"},{\"title\":\"角色结构\",\"note\":\"招标/中标/候选 角色占比\"},{\"title\":\"招投标参与明细\",\"note\":\"本次展示 10 条；上游总量 1000\"},{\"title\":\"拟建项目\",\"note\":\"本次展示拟建公告 5 条；上游总量 1005\"}]"
+      },
+      {
+        "expectation": "无数据维度不得补零",
+        "status": "pass",
+        "evidence": "已证明“无数据维度不得补零”。 三件套=True，空tbody=False，quality={\"total_sections\":14,\"populated_sections\":12,\"empty_sections\":2,\"coverage_pct\":86} 摘要/局限={\"summary\":\"本报告以“华为技术有限公司”为分析对象，基于公开招投标与采购数据，系统呈现企业中标统计、招标统计、采购统计、拟建项目与招投标参与明细。关键指标包括：招投标参与记录 1000、中标标的数 5、招标标的数 5、总中标金额 640.93 万、平均单笔金额 160.23 万。报告同时给出中标/招标/采购的结构化分布与趋势解读，便于市场分析、合作伙伴评估与供应链决策参考。\",\"limit\":\"数据来自公开招投标与采购公示；少量项目可能存在录入延迟或信息不全。\",\"insights\":[{\"feature\":\"招投标活跃度\",\"evidence\":\"企业招投标参与记录 1000 条。\",\"interpretation\":\"参与记录数量反映企业在招投标市场的活跃程度；结合角色（招标/中标）可判断其采购与供应角色。\"},{\"feature\":\"中标标的集中度\",\"evidence\":\"“扩容工程”占比约 32%，前 3 类合计 74%（CR3）。\",\"interpretation\":\"中标标的集中度反映企业核心供应能力与主营业务领域；CR3 越高说明业务越聚焦，反之则供应能力更综合。\"}]}"
+      }
+    ],
+    "issues": [],
+    "evidence_binding": {
+      "report.json": "873b41ddcedee2c4833bf3c6054c1ac64f329cab4e7b07c4f2b6a6857e339fbd",
+      "report.html": "f5f991d719d2ae0c1b5c698e679c50f828415001c611c94950bed730cf641aa0",
+      "report.md": "c320f21a0e76529fd760f666e5272da5d7b67b97a193910b2c56fa8aa8ed7ec1",
+      "calls.json": "ee14dd3987fdd1cf46176deb2155ea97370df3af8b4759b92650b289806e8638",
+      "result.json": "6434b1a44401c6c9c2b44061ff339324d65061d9d512dfc98e665ce1c563a379",
+      "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+    }
+  }
+}

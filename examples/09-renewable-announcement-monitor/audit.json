@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "skill": "bidding-skill",
+  "case_id": "09-renewable-announcement-monitor",
+  "title": "新能源招投标公告机会监测",
+  "invocation_id": "1793070036339698000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "80a86b006bcd9a369266677483e6eb05d34f5c04c5dfa8175bfa140e6fa680e7",
+    "skill_source_hashes": {
+      "scripts/common.py": "f2c4dfa24498a949618eb190f23a90769ad36e481846a2fcad9ce1b4591f2da0",
+      "scripts/compose_report.py": "509446ef282b3ac1ac260c1ff2d2cca1848ba29e93dab2f22b08f5abebbb793a",
+      "scripts/mcp_client.py": "5e3e1895c56cb9e287220216d86e50a6216bda2ed57e7700c483373677a039dc",
+      "scripts/render_report.py": "48fe6d8896cc504968c6ed9fee42c25206dd818f2bf14ccf97d686a6031cbac6",
+      "scripts/validate_config.py": "8ae07fb3e0f4ddb8f918995ff3e00b12ed0a33aa4f02ac378aaace8fb0d76bf3"
+    },
+    "upstream_source_hashes": {
+      "bidding-mcp-server": "76ed472a6796e09d7ef7098f4b4f8e18f252a033aa0b0642b40a9920bcc0f7b1"
+    },
+    "upstream_dependency_hashes": {
+      "bidding-mcp-server/server/mcp_server.py": "76ed472a6796e09d7ef7098f4b4f8e18f252a033aa0b0642b40a9920bcc0f7b1"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T11:00:36+08:00",
+  "elapsed_seconds": 8.492,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 bidding-skill/scripts/compose_report.py --search '新能源' --search-mode '全文匹配' --page-size 10 --output bidding-skill/output/live-replaced-20261027/09-renewable-announcement-monitor/report.json --report-output bidding-skill/output/live-replaced-20261027/09-renewable-announcement-monitor/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 1,
+  "successful_data_calls": 1,
+  "empty_calls": 0,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 100,
+    "subject": {
+      "enterprise": "新能源",
+      "matchKeyword": "新能源",
+      "keywordType": "market_search",
+      "match_raw": "新能源",
+      "resolved": true,
+      "resolve_reason": "市场检索模式",
+      "filters": {
+        "matchKeyword": "新能源",
+        "pageIndex": 1,
+        "pageSize": 10,
+        "searchMode": "全文匹配"
+      }
+    },
+    "title": "新能源 标讯大数据报告",
+    "data_mode": null,
+    "metrics": [
+      {
+        "label": "检索命中",
+        "value": "1000",
+        "hint": "本次检索命中招投标公告数"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 1,
+      "populated_sections": 1,
+      "empty_sections": 0,
+      "coverage_pct": 100
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 1,
+      "offline_scripts": true,
+      "independent_rerender": true,
+      "offline_browser": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "f2c4dfa24498a949618eb190f23a90769ad36e481846a2fcad9ce1b4591f2da0",
+    "scripts/compose_report.py": "509446ef282b3ac1ac260c1ff2d2cca1848ba29e93dab2f22b08f5abebbb793a",
+    "scripts/mcp_client.py": "5e3e1895c56cb9e287220216d86e50a6216bda2ed57e7700c483373677a039dc",
+    "scripts/render_report.py": "48fe6d8896cc504968c6ed9fee42c25206dd818f2bf14ccf97d686a6031cbac6",
+    "scripts/validate_config.py": "8ae07fb3e0f4ddb8f918995ff3e00b12ed0a33aa4f02ac378aaace8fb0d76bf3"
+  },
+  "technical_status": "passed",
+  "audited_at": "2026-10-27T11:12:55+08:00",
+  "evidence_binding": {
+    "report.json": "d189ab64d37ed5f0df450397f99250b37fe15e2656ddc6eafddb44000203aba9",
+    "report.html": "2c9196bde778812fd81972ac7ef9049edca844423adb92f6c4792b778dd4b935",
+    "report.md": "d7750e53444366fd295f64314bc80d4e96f183e15e8ea9bea99f83c6f46b1cdd",
+    "calls.json": "13805221543c7eb457a539de352c9dc53e897d93ea65c4f8f2848d1f76906ccd",
+    "result.json": "037a4e884fff8552b4e8e087a50e76920a81c9247f16b05d8bf4f9d6859a10ce",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

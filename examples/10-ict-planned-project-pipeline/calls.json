@@ -1,0 +1,368 @@
+[
+  {
+    "tool": "bid_bigdata_bid_win_stats",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793070044979266000",
+    "elapsed_seconds": 1.432,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "winbidAmountStatList",
+      "winbidAreaStat",
+      "winbidStatList",
+      "winbidTrend"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "winbidAmountStatList[0].percent",
+        "value": 7.84
+      },
+      {
+        "path": "winbidAmountStatList[0].count",
+        "value": 125
+      },
+      {
+        "path": "winbidAmountStatList[1].percent",
+        "value": 11.72
+      },
+      {
+        "path": "winbidAmountStatList[1].count",
+        "value": 187
+      },
+      {
+        "path": "winbidAmountStatList[2].percent",
+        "value": 13.35
+      },
+      {
+        "path": "winbidAmountStatList[2].count",
+        "value": 213
+      },
+      {
+        "path": "winbidAmountStatList[3].percent",
+        "value": 35.11
+      },
+      {
+        "path": "winbidAmountStatList[3].count",
+        "value": 560
+      },
+      {
+        "path": "winbidAmountStatList[4].percent",
+        "value": 31.97
+      },
+      {
+        "path": "winbidAmountStatList[4].count",
+        "value": 510
+      },
+      {
+        "path": "winbidAreaStat[0].count",
+        "value": 878
+      },
+      {
+        "path": "winbidAreaStat[1].count",
+        "value": 211
+      },
+      {
+        "path": "winbidAreaStat[2].count",
+        "value": 427
+      },
+      {
+        "path": "winbidAreaStat[3].count",
+        "value": 558
+      },
+      {
+        "path": "winbidAreaStat[4].count",
+        "value": 80
+      },
+      {
+        "path": "winbidStatList[0].count",
+        "value": 77
+      },
+      {
+        "path": "winbidStatList[0].percent",
+        "value": 1.07
+      },
+      {
+        "path": "winbidStatList[1].count",
+        "value": 65
+      },
+      {
+        "path": "winbidStatList[1].percent",
+        "value": 0.9
+      },
+      {
+        "path": "winbidStatList[2].count",
+        "value": 38
+      },
+      {
+        "path": "winbidStatList[2].percent",
+        "value": 0.53
+      },
+      {
+        "path": "winbidStatList[3].count",
+        "value": 35
+      },
+      {
+        "path": "winbidStatList[3].percent",
+        "value": 0.49
+      },
+      {
+        "path": "winbidStatList[4].count",
+        "value": 29
+      },
+      {
+        "path": "winbidStatList[4].percent",
+        "value": 0.4
+      },
+      {
+        "path": "winbidTrend[0].count",
+        "value": 397
+      },
+      {
+        "path": "winbidTrend[1].count",
+        "value": 587
+      },
+      {
+        "path": "winbidTrend[2].count",
+        "value": 612
+      },
+      {
+        "path": "winbidTrend[3].count",
+        "value": 447
+      },
+      {
+        "path": "winbidTrend[4].count",
+        "value": 1096
+      }
+    ],
+    "response_sha256": "2746630bf7cef5dba414d06a399c4dbd5a864e665792f57db5689e8fc6d93f4c"
+  },
+  {
+    "tool": "bid_bigdata_tender_stats",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793070044979266000",
+    "elapsed_seconds": 0.663,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "tenderAmountStatList",
+      "tenderAreaStat",
+      "tenderStatList",
+      "tenderTrend"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "tenderAmountStatList[0].count",
+        "value": 14
+      },
+      {
+        "path": "tenderAmountStatList[0].percent",
+        "value": 10.37
+      },
+      {
+        "path": "tenderAmountStatList[1].count",
+        "value": 12
+      },
+      {
+        "path": "tenderAmountStatList[1].percent",
+        "value": 8.89
+      },
+      {
+        "path": "tenderAmountStatList[2].count",
+        "value": 10
+      },
+      {
+        "path": "tenderAmountStatList[2].percent",
+        "value": 7.41
+      },
+      {
+        "path": "tenderAmountStatList[3].count",
+        "value": 21
+      },
+      {
+        "path": "tenderAmountStatList[3].percent",
+        "value": 15.56
+      },
+      {
+        "path": "tenderAmountStatList[4].count",
+        "value": 78
+      },
+      {
+        "path": "tenderAmountStatList[4].percent",
+        "value": 57.78
+      },
+      {
+        "path": "tenderAreaStat[0].count",
+        "value": 1
+      },
+      {
+        "path": "tenderAreaStat[1].count",
+        "value": 1
+      },
+      {
+        "path": "tenderAreaStat[2].count",
+        "value": 113
+      },
+      {
+        "path": "tenderAreaStat[3].count",
+        "value": 13
+      },
+      {
+        "path": "tenderAreaStat[4].count",
+        "value": 4
+      },
+      {
+        "path": "tenderStatList[0].count",
+        "value": 39
+      },
+      {
+        "path": "tenderStatList[0].percent",
+        "value": 15.54
+      },
+      {
+        "path": "tenderStatList[1].count",
+        "value": 35
+      },
+      {
+        "path": "tenderStatList[1].percent",
+        "value": 13.94
+      },
+      {
+        "path": "tenderStatList[2].count",
+        "value": 11
+      },
+      {
+        "path": "tenderStatList[2].percent",
+        "value": 4.38
+      },
+      {
+        "path": "tenderStatList[3].count",
+        "value": 8
+      },
+      {
+        "path": "tenderStatList[3].percent",
+        "value": 3.19
+      },
+      {
+        "path": "tenderStatList[4].count",
+        "value": 6
+      },
+      {
+        "path": "tenderStatList[4].percent",
+        "value": 2.39
+      },
+      {
+        "path": "tenderTrend[0].count",
+        "value": 18
+      },
+      {
+        "path": "tenderTrend[1].count",
+        "value": 17
+      },
+      {
+        "path": "tenderTrend[2].count",
+        "value": 48
+      },
+      {
+        "path": "tenderTrend[3].count",
+        "value": 96
+      },
+      {
+        "path": "tenderTrend[4].count",
+        "value": 39
+      }
+    ],
+    "response_sha256": "7dc460f678d9ec2ff358aa920bb2c5e4a4be9426b5dee8284c040366c543ed7a"
+  },
+  {
+    "tool": "bid_bigdata_procurement_stats",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793070044979266000",
+    "elapsed_seconds": 0.303,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "bid_bigdata_bidding_info",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "pageSize": 5
+    },
+    "invocation_id": "1793070044979266000",
+    "elapsed_seconds": 0.248,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 5,
+    "reported_total": 1000,
+    "numeric_evidence": [
+      {
+        "path": "resultList[1].projectAmount",
+        "value": 201.48
+      },
+      {
+        "path": "total",
+        "value": 1000
+      }
+    ],
+    "response_sha256": "df829ce12274a5fbb40f71f64eec1c28b5b796e8e90a4f2ca364e56253fd85a7"
+  },
+  {
+    "tool": "bid_bigdata_planned_projects",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "pageSize": 10
+    },
+    "invocation_id": "1793070044979266000",
+    "elapsed_seconds": 0.289,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 1005,
+    "numeric_evidence": [
+      {
+        "path": "total",
+        "value": 1005
+      }
+    ],
+    "response_sha256": "cf6c18b8ccd0404add15a4c2aeb24d39f4be1754a28a32cac90bbb69764cc9f5"
+  }
+]

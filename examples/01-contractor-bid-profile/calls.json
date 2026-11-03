@@ -1,0 +1,372 @@
+[
+  {
+    "tool": "bid_bigdata_bid_win_stats",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "中国建筑第八工程局有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793070032490316000",
+    "elapsed_seconds": 1.714,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "winbidAmountStatList",
+      "winbidAreaStat",
+      "winbidStatList",
+      "winbidTrend"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "winbidAmountStatList[0].percent",
+        "value": 3.61
+      },
+      {
+        "path": "winbidAmountStatList[0].count",
+        "value": 242
+      },
+      {
+        "path": "winbidAmountStatList[1].percent",
+        "value": 0.95
+      },
+      {
+        "path": "winbidAmountStatList[1].count",
+        "value": 64
+      },
+      {
+        "path": "winbidAmountStatList[2].percent",
+        "value": 0.85
+      },
+      {
+        "path": "winbidAmountStatList[2].count",
+        "value": 57
+      },
+      {
+        "path": "winbidAmountStatList[3].percent",
+        "value": 2.91
+      },
+      {
+        "path": "winbidAmountStatList[3].count",
+        "value": 195
+      },
+      {
+        "path": "winbidAmountStatList[4].percent",
+        "value": 91.68
+      },
+      {
+        "path": "winbidAmountStatList[4].count",
+        "value": 6147
+      },
+      {
+        "path": "winbidAreaStat[0].count",
+        "value": 393
+      },
+      {
+        "path": "winbidAreaStat[1].count",
+        "value": 601
+      },
+      {
+        "path": "winbidAreaStat[2].count",
+        "value": 528
+      },
+      {
+        "path": "winbidAreaStat[3].count",
+        "value": 234
+      },
+      {
+        "path": "winbidAreaStat[4].count",
+        "value": 1594
+      },
+      {
+        "path": "winbidStatList[0].count",
+        "value": 273
+      },
+      {
+        "path": "winbidStatList[0].percent",
+        "value": 3.03
+      },
+      {
+        "path": "winbidStatList[1].count",
+        "value": 227
+      },
+      {
+        "path": "winbidStatList[1].percent",
+        "value": 2.52
+      },
+      {
+        "path": "winbidStatList[2].count",
+        "value": 212
+      },
+      {
+        "path": "winbidStatList[2].percent",
+        "value": 2.35
+      },
+      {
+        "path": "winbidStatList[3].count",
+        "value": 139
+      },
+      {
+        "path": "winbidStatList[3].percent",
+        "value": 1.54
+      },
+      {
+        "path": "winbidStatList[4].count",
+        "value": 127
+      },
+      {
+        "path": "winbidStatList[4].percent",
+        "value": 1.41
+      },
+      {
+        "path": "winbidTrend[0].count",
+        "value": 680
+      },
+      {
+        "path": "winbidTrend[1].count",
+        "value": 1319
+      },
+      {
+        "path": "winbidTrend[2].count",
+        "value": 1803
+      },
+      {
+        "path": "winbidTrend[3].count",
+        "value": 1118
+      },
+      {
+        "path": "winbidTrend[4].count",
+        "value": 1582
+      }
+    ],
+    "response_sha256": "ecb8e2ac52b684dc95b12223d19c7cb8caede3977a88c683d714790667ee3c33"
+  },
+  {
+    "tool": "bid_bigdata_tender_stats",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "中国建筑第八工程局有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793070032490316000",
+    "elapsed_seconds": 1.425,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "tenderAmountStatList",
+      "tenderAreaStat",
+      "tenderStatList",
+      "tenderTrend"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "tenderAmountStatList[0].count",
+        "value": 238
+      },
+      {
+        "path": "tenderAmountStatList[0].percent",
+        "value": 2.21
+      },
+      {
+        "path": "tenderAmountStatList[1].count",
+        "value": 677
+      },
+      {
+        "path": "tenderAmountStatList[1].percent",
+        "value": 6.29
+      },
+      {
+        "path": "tenderAmountStatList[2].count",
+        "value": 926
+      },
+      {
+        "path": "tenderAmountStatList[2].percent",
+        "value": 8.6
+      },
+      {
+        "path": "tenderAmountStatList[3].count",
+        "value": 3552
+      },
+      {
+        "path": "tenderAmountStatList[3].percent",
+        "value": 32.99
+      },
+      {
+        "path": "tenderAmountStatList[4].count",
+        "value": 5373
+      },
+      {
+        "path": "tenderAmountStatList[4].percent",
+        "value": 49.91
+      },
+      {
+        "path": "tenderAreaStat[0].count",
+        "value": 1514
+      },
+      {
+        "path": "tenderAreaStat[1].count",
+        "value": 726
+      },
+      {
+        "path": "tenderAreaStat[2].count",
+        "value": 686
+      },
+      {
+        "path": "tenderAreaStat[3].count",
+        "value": 686
+      },
+      {
+        "path": "tenderAreaStat[4].count",
+        "value": 5970
+      },
+      {
+        "path": "tenderStatList[0].count",
+        "value": 385
+      },
+      {
+        "path": "tenderStatList[0].percent",
+        "value": 2.63
+      },
+      {
+        "path": "tenderStatList[1].count",
+        "value": 259
+      },
+      {
+        "path": "tenderStatList[1].percent",
+        "value": 1.77
+      },
+      {
+        "path": "tenderStatList[2].count",
+        "value": 212
+      },
+      {
+        "path": "tenderStatList[2].percent",
+        "value": 1.45
+      },
+      {
+        "path": "tenderStatList[3].count",
+        "value": 192
+      },
+      {
+        "path": "tenderStatList[3].percent",
+        "value": 1.31
+      },
+      {
+        "path": "tenderStatList[4].count",
+        "value": 184
+      },
+      {
+        "path": "tenderStatList[4].percent",
+        "value": 1.26
+      },
+      {
+        "path": "tenderTrend[0].count",
+        "value": 1104
+      },
+      {
+        "path": "tenderTrend[1].count",
+        "value": 1596
+      },
+      {
+        "path": "tenderTrend[2].count",
+        "value": 1961
+      },
+      {
+        "path": "tenderTrend[3].count",
+        "value": 1607
+      },
+      {
+        "path": "tenderTrend[4].count",
+        "value": 1662
+      }
+    ],
+    "response_sha256": "060ae90781e554825158829ec831ae49a66bcf72e5dca6d8bccabad40f1ebd2a"
+  },
+  {
+    "tool": "bid_bigdata_procurement_stats",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "中国建筑第八工程局有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793070032490316000",
+    "elapsed_seconds": 0.686,
+    "status": "empty",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "text"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [],
+    "response_sha256": "b2da0c4c26e517e5a1eae0af2a20ca47c52ef51906cf1c3dfa2fe10a67cc714c"
+  },
+  {
+    "tool": "bid_bigdata_bidding_info",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "中国建筑第八工程局有限公司",
+      "keywordType": "name",
+      "pageSize": 10
+    },
+    "invocation_id": "1793070032490316000",
+    "elapsed_seconds": 8.289,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 1000,
+    "numeric_evidence": [
+      {
+        "path": "resultList[1].projectAmount",
+        "value": 3144.99
+      },
+      {
+        "path": "resultList[3].projectAmount",
+        "value": 480.0
+      },
+      {
+        "path": "total",
+        "value": 1000
+      }
+    ],
+    "response_sha256": "f6c6d57a977b21a773828e2b81b0d2ff51617a62074f51feee60011a1be48441"
+  },
+  {
+    "tool": "bid_bigdata_planned_projects",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "中国建筑第八工程局有限公司",
+      "keywordType": "name",
+      "pageSize": 8
+    },
+    "invocation_id": "1793070032490316000",
+    "elapsed_seconds": 0.366,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 8,
+    "reported_total": 27,
+    "numeric_evidence": [
+      {
+        "path": "total",
+        "value": 27
+      }
+    ],
+    "response_sha256": "efa1aa39e41f1d162286c7a0998678f54314148c84395e433bb47e7d21f66279"
+  }
+]
