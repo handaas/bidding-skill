@@ -17,7 +17,7 @@
         "business-review.json": "feebe37c27911b2ba009d61e72fef3c469c2007166a84ee68559b5365e358867",
         "browser-check.json": "dd6523e87d50f83c3d7522d4bf8ddb19621e43accda40a6198052776745b412f"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/01-contractor-bid-profile.md"
+      "audit_record": "../test-records/live-replaced-20261027/01-contractor-bid-profile.md"
     },
     {
       "skill": "bidding-skill",
@@ -35,7 +35,7 @@
         "business-review.json": "4e5e34beafd531256497e634a1cbb8a3b71611d6ab7c9c380a40165e04292d3a",
         "browser-check.json": "e133251beb01a0afc9b3ba7bf7ec4ab49cf79784040900abd682661fa52794fa"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/02-ict-bid-profile.md"
+      "audit_record": "../test-records/live-replaced-20261027/02-ict-bid-profile.md"
     },
     {
       "skill": "bidding-skill",
@@ -53,7 +53,7 @@
         "business-review.json": "a922b0e2341276e2893679f21f220b1507f89ee02e7b02397b8df8a8a47702dc",
         "browser-check.json": "3d793fe9bfd518a2be143694e886f07df308791d9834d24977a881fa7815c5b5"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/09-renewable-announcement-monitor.md"
+      "audit_record": "../test-records/live-replaced-20261027/09-renewable-announcement-monitor.md"
     },
     {
       "skill": "bidding-skill",
@@ -71,7 +71,7 @@
         "business-review.json": "591af988925c8e6756fddf1c10cd8b1c40b55b107bb2c0c99de6c2710bcb70ad",
         "browser-check.json": "4d9f15fb3b615754d26cd888b1c16f1d92fde089fa5b75606c10732047325e23"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/10-ict-planned-project-pipeline.md"
+      "audit_record": "../test-records/live-replaced-20261027/10-ict-planned-project-pipeline.md"
     }
   ]
 }
