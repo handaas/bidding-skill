@@ -33,6 +33,13 @@ handaas-token：<在此粘贴本人在旷湖SKILL平台获取的完整 Token>
 
 Token 只放在运行进程的环境变量或仓库外的私有配置中；用户粘贴本指引即视为授权按默认预算执行真实查询；不要擅自扩大调用范围。
 
+### 注册并创建对接器
+
+1. 打开 [旷湖官网](https://www.handaas.com/) 注册并登录。
+2. 进入「数据管理」→「对接器」→「创建对接器」。
+3. 选择本 Skill 对应的服务类型「标讯项目动态」。
+4. 创建后复制完整 `handaas-token`，按上文注入 `BIDDING_MCP_TOKEN`；Token 注意保管，请勿泄露。
+
 ### 智能体安装约定
 
 智能体按以下六步完成安装（本 Skill 为原子 Skill，单域 `bidding-mcp-server`）：
