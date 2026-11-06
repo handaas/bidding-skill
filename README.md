@@ -28,7 +28,7 @@
 2. 使用旷湖SKILL平台在线 MCP：服务地址见本 README「接入 MCP 服务」，平台返回的地址优先。不部署本地 MCP，不索要 INTEGRATOR_ID / SECRET_ID / SECRET_KEY。
 3. 将完整 handaas-token 作为环境变量 `BIDDING_MCP_TOKEN` 注入运行 Python 的进程，并设置 `BIDDING_MCP_URL`；环境变量必须真正到达该进程，只保存文件或在别的终端 export 不算完成。
 4. Token 原样保留逗号等字符：不拆分、不解码、不放进 URL、不手动加 Bearer。不要把 Token 写入仓库、SKILL.md、README、示例配置、报告或终端历史；若只能使用仓库外的私有环境文件，权限设为 0600，并由启动器显式加载。不要回显 Token、请求头或原始鉴权错误；Token 注意保管，请勿泄露。
-5. 正式执行真实查询：加 --live 生成 HTML / Markdown / JSON 报告；按问题范围使用默认页数预算，不为填模板扩大调用，也不重复请求。
+5. 正式执行真实查询：加 --live 生成 HTML / Markdown / JSON 报告；按问题范围使用默认页数预算，不为填模板扩大调用，也不重复请求。生成含图表的 HTML / PDF 报告需要 Node.js（推荐当前 LTS，无需 npm 包）：依赖检查阶段用安全可用的工具检查并在缺失时补齐 Node，不产生付费调用；查看已生成的 HTML 不需要 Node / 服务器 / 网络。
 6. 只返回脱敏结果：安装目录、私有配置位置、真实查询调用次数与数据范围、报告路径。缺少地址或 Token 时明确说明缺失项，不要把连接失败说成企业没有数据。
 
 handaas-token：<在此粘贴本人在旷湖SKILL平台获取的完整 Token>
@@ -47,7 +47,7 @@ Token 只放在运行进程的环境变量或仓库外的私有配置中；用�
 
 智能体按以下六步完成安装（本 Skill 为原子 Skill，单域 `bidding-mcp-server`）：
 
-1. 先读本仓库的 SKILL.md 和 README.md，按当前智能体自身的 Skill 安装与依赖约定操作；以实际包含 SKILL.md 的目录为 skill 根目录，保留已有安装与配置，不假设克隆后还嵌套一层同名目录，不默认全局注册。
+1. 先读本仓库的 SKILL.md 和 README.md，按当前智能体自身的 Skill 安装与依赖约定操作；生成含图表的 HTML / PDF 报告另需 Node.js（推荐当前 LTS，无需 npm 包），安装验收时用安全可用的工具检查并在缺失时补齐。以实际包含 SKILL.md 的目录为 skill 根目录，保留已有安装与配置，不假设克隆后还嵌套一层同名目录，不默认全局注册。
 2. 使用旷湖SKILL平台为本 Skill 一键创建的在线 MCP 服务；Token 由本 Skill 专属变量 `BIDDING_MCP_TOKEN` 提供，所需服务复用同一值。在线安装不克隆 handaas-mcp-server、不启动本地服务、不索要 INTEGRATOR_ID / SECRET_ID / SECRET_KEY。
 3. 把完整 Token 保存到本机智能体的私有密钥/环境配置中，并作为 `BIDDING_MCP_TOKEN` 注入运行 Python 脚本的进程；同时把下文服务地址注入 `BIDDING_MCP_URL`。不要只注册智能体原生 MCP 而漏配 Python 进程；不要声称脚本会自动加载 `.env` 或读取 `config.json` 的 `remote_mcp`（当前实现不会）。若宿主没有持久环境机制，可用仓库外的私有环境文件配合宿主启动器显式加载（POSIX 权限 0600，Windows 限当前用户）；无法安全持久化时要明确报告，不要宣称配置完成。
 4. Token 是不透明字符串，逗号等字符要完整保留：不拆分、不解码、不写进 URL、不重复添加 Bearer 前缀（客户端自行添加 `Authorization: Bearer`）。只设置本 Skill 专属的 `BIDDING_MCP_TOKEN`；不要配置共享 Token 变量。
@@ -62,6 +62,7 @@ Token 只放在运行进程的环境变量或仓库外的私有配置中；用�
 cd bidding-skill
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+# 生成含图表的 HTML 还需要 Node.js（推荐当前 LTS），检查：node --version
 python scripts/compose_report.py \
   --enterprise "中国铁建股份有限公司" \
   --dry-run \
@@ -69,7 +70,7 @@ python scripts/compose_report.py \
   --report-output output/report.html
 ```
 
-打开 `output/report.html` 即可看到完整报告效果。
+打开 `output/report.html` 即可看到完整报告效果。生成含图表的 HTML 需要 Node.js（推荐当前 LTS，无需 npm 包，可用 node --version 检查）；打开已生成的 HTML 不需要 Node / 服务器 / 网络，Markdown 输出也不需要 Node。
 
 ## 接入 MCP 服务
 
@@ -155,10 +156,12 @@ python scripts/compose_report.py \
 
 | 文件 | 说明 |
 | --- | --- |
-| `output/report.html` | 浏览器直接打开，含 ECharts 交互图表 |
+| `output/report.html` | 浏览器直接打开，无需 Node / 服务器 / 网络；图表先显示内嵌静态 SVG，允许 JavaScript 时增强 tooltip / 图例交互 |
 | `output/report.md` | Markdown 格式，适合放入 Wiki / 文档系统 |
 | `output/report.json` | 结构化原始数据，适合二次处理 |
-| `output/report.pdf` | 打印友好版，需安装 Playwright |
+| `output/report.pdf` | 打印友好版，需安装 Playwright；含图表的生成另需 Node.js |
+
+HTML 打开时先显示生成期内嵌的静态 SVG 图表，无需 JavaScript；允许 JavaScript 时再以 ECharts 增强 tooltip、图例等交互，交互失败仍保留静态图表。静态优先渲染不保证会剥离 SVG / 图片或只展示 HTML 源码的平台能显示图表。
 
 ### 重渲染已有 JSON
 
@@ -255,7 +258,7 @@ python scripts/mcp_client.py ping
 
 ### 5. PDF 导出不可用
 
-PDF 导出需要 Playwright + Chromium：
+PDF 导出需要 Playwright + Chromium；生成含图表的 HTML / PDF 还要求本机 Node.js（推荐当前 LTS，无需 npm 包），缺失时报告生成会明确报错，不会输出空白图表。查看已生成的 HTML 不需要 Node：
 
 ```bash
 pip install playwright

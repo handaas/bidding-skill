@@ -87,6 +87,35 @@ description: Use for generating a professional bidding/tender big-data report (�
 
 返回：JSON、HTML、Markdown 文件路径，以及企业全称映射 / 检索条件与数据口径。
 
+## 内容整理与交付审校
+
+1. **先读实际明细**：打开本次 `report.json` 的 `core_analysis` 与 `metrics`，逐条核对标的、金额、地区、客户与日期；`quality_report.coverage_pct` 只是章节填充率，不能代替内容检查。
+2. **集中度基准**：上游标的分布常只返回前 5 项且 `占比` 是全体占比。不得用“前 5 项数量合计”当分母重算 CR3（会把 1% 的标的写成 30%）；有 `占比` 时按占比合计，无占比时明确写“返回项内 CR3，基准为返回项合计”。
+3. **样本与全量**：`招投标参与记录` 用上游 total；金额、信息类型、客户、角色只统计当前展示记录时必须写明“本次展示 N 条中”，缺失金额保留缺失，不按 0 计。
+4. **角色冲突**：`公告类型` 与 `招投标角色` 可能不一致（如“中标公告”配“招标”）。保留上游值并提示回看原文，不按类型改写角色，也不据此判断供应/采购身份。
+5. **拟建项目**：同一项目可能有多条审批/备案公告（项目名称相同、时间不同），记录数不等于项目数；按项目名称 + 项目代码归组核对，不删除旧公告。`项目内容` 是上游原文摘录，已截断时标注“原文摘录”。
+6. **趋势**：年份序列按年排序后再比较；最新年度未满全年时排除同比，不得拿最老两个年度当“近年趋势”。峰值并列时列出全部年份。
+7. **检索相关性**：市场检索的命中数不是项目数或成交数。标题未含关键词的记录保留但标为“需核对正文”；同题公告可能对应不同地区/采购包，不按标题去重后冒充项目数。
+8. **内容整理（正常生成 + 离线修订）**：正常 `build_payload` / `build_search_payload` 与 `--dry-run` 样例生成在写 JSON/HTML/MD 前自动调用 `apply_content_review(report)`；同一函数也可基于已有 JSON 重算上述口径文案与集中度基准，不调用 MCP、不改原始记录字段。离线修订件另存 `output/content-quality-review/<case>/`。
+
+```bash
+# 离线重放（不查 MCP；source_sha256 由调用方对原文件计算）
+python - <<'PY'
+import hashlib, json, sys
+from pathlib import Path
+sys.path.insert(0, "scripts")
+import compose_report as cr
+src = Path("examples/01-contractor-bid-profile/report.json")
+raw = src.read_bytes()
+report = cr.apply_content_review(json.loads(raw), source_sha256=hashlib.sha256(raw).hexdigest())
+out = Path("output/content-quality-review/01-contractor-bid-profile")
+out.mkdir(parents=True, exist_ok=True)
+(out / "report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+PY
+```
+
+- **渲染前置检查**：执行会产出含图表 HTML / PDF 的报告命令前，先验证 `node --version` 与本 skill 自带 `assets/vendor/echarts.min.js` 存在；内嵌静态 SVG 的生成需要 Node.js（推荐当前 LTS，无需 npm 包），缺失时报告生成明确报错。查看已生成的 HTML 与 Markdown 输出不需要 Node。
+
 ## 脚本速查
 
 ```bash
@@ -141,7 +170,7 @@ python scripts/render_report.py --input output/bidding.json --output output/bidd
 
 - `subject`：企业全称 / 检索关键词、匹配方式、是否自动补全。
 - `abstract` / `summary`：封面摘要与详细摘要。
-- `metrics`：招投标参与记录、中标标的数、招标标的数、采购产品数、拟建项目数 / 检索命中数。
+- `metrics`：招投标参与记录（上游总量）、中标/招标标的类型数（分布项数，不是项目数）、采购产品类型数、展示记录中标金额合计/单笔均值、展示记录主要类型/采购方数、拟建项目数、中标地区项数 / 检索命中数。
 - `caliber`：匹配对象、匹配方式、数据范围、产品、局限。
 - `core_analysis`：中标（标的/金额/区域分布+趋势）、招标（同）、采购（产品/区域分布）、招投标参与明细、拟建项目 / 检索明细（每节均为表格，由 `core_analysis.sections` 驱动）。
 - `representative_records`：代表性招投标记录 Top N。

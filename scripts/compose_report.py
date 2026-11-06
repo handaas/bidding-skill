@@ -19,6 +19,7 @@ specific enterprise. This file never prints secrets.
 from __future__ import annotations
 
 import argparse
+import copy
 import datetime as dt
 import json
 import pathlib
@@ -235,24 +236,21 @@ def _derive_core_metrics(metrics: List[Dict[str, Any]], core: Mapping[str, Any])
     """Derive additional metrics from core analysis sections."""
     win_area = core.get("win_area", []) if isinstance(core, dict) else []
     win_trend = core.get("win_trend", []) if isinstance(core, dict) else []
-    customer_top = core.get("customer_top", []) if isinstance(core, dict) else []
     role_dist = core.get("role_dist", []) if isinstance(core, dict) else []
     if isinstance(win_area, list) and win_area:
-        metrics.append({"label": "中标地区数", "value": str(len(win_area)), "hint": "中标项目覆盖的地区总数"})
+        metrics.append({"label": "中标地区项数", "value": str(len(win_area)), "hint": "上游返回的中标地区分布项数"})
         try:
             nums = [int(r.get("数量", 0) or 0) for r in win_area if str(r.get("数量", "0")).isdigit() or isinstance(r.get("数量"), (int, float))]
             total = sum(nums)
             if total > 0:
                 top3 = sum(sorted(nums, reverse=True)[:3])
-                metrics.append({"label": "地区CR3", "value": f"{top3/total*100:.1f}%", "hint": "前3大中标地区集中度"})
+                metrics.append({"label": "地区CR3", "value": f"{top3/total*100:.1f}%", "hint": "返回地区项内前3合计；基准为返回项合计，不是全量地区"})
         except (ValueError, TypeError):
             pass
     if isinstance(win_trend, list) and win_trend:
-        metrics.append({"label": "中标年份跨度", "value": str(len(win_trend)), "hint": "有中标记录的年度数"})
-    if isinstance(customer_top, list) and customer_top:
-        metrics.append({"label": "采购方数", "value": str(len(customer_top)), "hint": "不同采购方/客户数量"})
+        metrics.append({"label": "有中标记录年度数", "value": str(len(win_trend)), "hint": "上游趋势中出现的年度数，不等同于企业存续年限"})
     if isinstance(role_dist, list) and role_dist:
-        metrics.append({"label": "角色类型数", "value": str(len(role_dist)), "hint": "招投标中的角色类型数"})
+        metrics.append({"label": "展示记录角色类型数", "value": str(len(role_dist)), "hint": "仅统计本次展示的招投标明细记录"})
     return metrics
 
 
@@ -377,27 +375,29 @@ def _requested_product_rows(subject: Mapping[str, Any], search_mode: bool) -> Li
 def build_metrics(win: Mapping[str, Any], tender: Mapping[str, Any], proc: Mapping[str, Any], info_total: Any, planned_total: Any, core: Optional[Mapping[str, Any]] = None) -> List[Dict[str, Any]]:
     metrics: List[Dict[str, Any]] = []
     core = core or {}
-    metrics.append({"label": "招投标参与记录", "value": (_text(info_total) if info_total is not None else "-"), "hint": "招投标信息条数"})
-    metrics.append({"label": "中标标的数", "value": _dist_count(win, "winbidStatList"), "hint": "中标标的分布项数"})
-    metrics.append({"label": "招标标的数", "value": _dist_count(tender, "tenderStatList"), "hint": "招标标的分布项数"})
-    metrics.append({"label": "采购产品数", "value": _dist_count(proc, "purchasingProductStatList"), "hint": "采购产品分布项数"})
-    # 总中标金额 / 平均单笔金额（万元）from aggregated 中标/候选 projectAmount
+    sample_n = len(core.get("info_records") or [])
+    metrics.append({"label": "招投标参与记录", "value": (_text(info_total) if info_total is not None else "-"), "hint": "上游招投标信息总量"})
+    metrics.append({"label": "中标标的类型数", "value": _dist_count(win, "winbidStatList"), "hint": "上游返回的中标标的分布项数，不是中标项目数"})
+    metrics.append({"label": "招标标的类型数", "value": _dist_count(tender, "tenderStatList"), "hint": "上游返回的招标标的分布项数，不是招标项目数"})
+    metrics.append({"label": "采购产品类型数", "value": _dist_count(proc, "purchasingProductStatList"), "hint": "上游返回的采购产品分布项数"})
+    # 金额只合计当前展示记录中 role=中标/候选且含金额的记录，避免把样本写成全量。
     win_amounts = core.get("win_amounts") or []
     if win_amounts:
         total_amt = sum(win_amounts)
         avg_amt = total_amt / len(win_amounts)
-        metrics.append({"label": "总中标金额", "value": f"{total_amt:,.2f} 万", "hint": "已命中中标/候选公告金额合计"})
-        metrics.append({"label": "平均单笔金额", "value": f"{avg_amt:,.2f} 万", "hint": "中标公告金额均值"})
-    # 信息类型（出现次数最多的）
+        scope = f"本次展示{sample_n}条中{len(win_amounts)}条含金额记录" if sample_n else f"{len(win_amounts)}条含金额记录"
+        metrics.append({"label": "展示记录中标金额合计", "value": f"{total_amt:,.2f} 万元", "hint": f"{scope}；不是企业全量中标金额"})
+        metrics.append({"label": "展示记录单笔均值", "value": f"{avg_amt:,.2f} 万元", "hint": f"{scope}的算术均值"})
+    # 信息类型（仅统计当前展示记录）
     info_type_dist = core.get("info_type_dist") or []
     if info_type_dist:
         top_type = info_type_dist[0]
-        metrics.append({"label": "主要信息类型", "value": f"{top_type.get('信息类型', '-')}（{top_type.get('数量', 0)}）", "hint": "采购意向/中标公告等"})
-    # 主要客户/采购方数
+        metrics.append({"label": "展示记录主要类型", "value": f"{top_type.get('信息类型', '-')}（{top_type.get('数量', 0)}条）", "hint": f"仅统计本次展示{sample_n}条记录；括号内为该类型条数"})
+    # 采购方数（与主要客户/采购方同一指标，只保留一个）
     customer_top = core.get("customer_top") or []
     if customer_top:
-        metrics.append({"label": "主要客户/采购方", "value": str(len(customer_top)) + " 家", "hint": "公告中出现的采购方去重数"})
-    metrics.append({"label": "拟建项目", "value": (_text(planned_total) if planned_total is not None else "-"), "hint": "拟建公告条数"})
+        metrics.append({"label": "展示记录采购方数", "value": str(len(customer_top)) + " 家", "hint": f"本次展示{sample_n}条记录中出现的采购方去重数"})
+    metrics.append({"label": "拟建项目", "value": (_text(planned_total) if planned_total is not None else "-"), "hint": "上游拟建公告总量"})
     return [m for m in metrics if m.get("value") not in ("", None, "-")]
 
 
@@ -624,52 +624,157 @@ def build_records(core: Mapping[str, Any]) -> List[Dict[str, Any]]:
     return out[:20]
 
 
-def _concentration(rows: List[Mapping[str, Any]], top_n: int = 3, name_key: str = "名称", value_key: str = "数量") -> Dict[str, Any]:
-    """Compute top-N concentration (CRn) and dominant category from rows.
+def _share_value(row: Mapping[str, Any], share_key: str = "占比") -> Optional[float]:
+    """Return an upstream share when it is a real number, else None.
 
-    Rows are dicts; `name_key` picks the label and `value_key` picks the numeric
-    weight. Returns {} when there is no positive total.
+    Upstream `percent` is a share of the full population, while `数量` may be a
+    truncated top-N list. Treating them as the same denominator overstates CRn.
+    """
+    raw = row.get(share_key)
+    if raw in (None, "", "-"):
+        return None
+    try:
+        value = float(str(raw).replace("%", "").replace(",", "").strip())
+    except (TypeError, ValueError):
+        return None
+    return value if 0 <= value <= 100 else None
+
+
+def _concentration(rows: List[Mapping[str, Any]], top_n: int = 3, name_key: str = "名称", value_key: str = "数量", share_key: str = "占比") -> Dict[str, Any]:
+    """Compute top-N concentration from a returned distribution.
+
+    When every row carries an upstream share, use those shares (basis =
+    ``upstream_share``) so a truncated top-5 list is not mistaken for the whole
+    population. Otherwise compute within the returned rows and say so via
+    ``basis = returned_rows``.
     """
     items = []
+    shares = []
     for r in rows:
         try:
             items.append((r.get(name_key, "-"), float(str(r.get(value_key, 0)).replace(",", ""))))
         except (TypeError, ValueError):
             items.append((r.get(name_key, "-"), 0.0))
+        shares.append(_share_value(r, share_key))
     total = sum(v for _, v in items)
     if not total:
         return {}
     items.sort(key=lambda x: x[1], reverse=True)
+    if all(s is not None for s in shares):
+        share_by_name = {r.get(name_key, "-"): s for r, s in zip(rows, shares) if s is not None}
+        top_share = share_by_name.get(items[0][0], 0.0)
+        cr = sum(s for s in sorted(shares, reverse=True)[:top_n])
+        return {"top": items[0][0], "top_share": top_share, "cr": cr, "total": total,
+                "n": len(items), "basis": "upstream_share"}
     cr = sum(v for _, v in items[:top_n]) / total * 100
-    return {"top": items[0][0], "top_share": items[0][1] / total * 100, "cr": cr, "total": total}
+    return {"top": items[0][0], "top_share": items[0][1] / total * 100, "cr": cr, "total": total,
+            "n": len(items), "basis": "returned_rows"}
 
 
-def _trend_analysis(rows: List[Mapping[str, Any]]) -> Dict[str, Any]:
-    """Compute trend direction, peak, and YoY change from {年份,数量} series."""
-    nums = []
+def _trend_analysis(rows: List[Mapping[str, Any]], as_of_year: Optional[int] = None) -> Dict[str, Any]:
+    """Analyse a year series without comparing the wrong end of the list.
+
+    Upstream returns years newest-first by default. This sorts by year, reports
+    the peak (including ties), and computes year-over-year only from complete
+    years: when `as_of_year` is present in the series it is reported as a
+    partial year and excluded from the YoY comparison.
+    """
+    series = []
     for r in rows:
+        year_raw = str(r.get("年份", "")).strip()
         try:
-            nums.append(float(str(r.get("数量", 0)).replace(",", "")))
+            year = int(year_raw[:4])
         except (TypeError, ValueError):
-            nums.append(0.0)
-    if not nums:
+            continue
+        try:
+            value = float(str(r.get("数量", 0)).replace(",", ""))
+        except (TypeError, ValueError):
+            value = 0.0
+        series.append((year, value))
+    if not series:
         return {}
-    peak_idx = max(range(len(nums)), key=lambda i: nums[i])
-    direction = "持平"
+    series.sort(key=lambda x: x[0])
+    years = [y for y, _ in series]
+    nums = [v for _, v in series]
+    peak = max(nums)
+    peak_years = [str(y) for y, v in series if v == peak]
+    latest_year = years[-1]
+    partial_year = latest_year if as_of_year is not None and latest_year == as_of_year else None
+    complete = [(y, v) for y, v in series if y != partial_year]
     yoy = ""
-    if len(nums) >= 2:
-        last, prev = nums[-1], nums[-2]
+    direction = "持平"
+    compare = ""
+    if len(complete) >= 2:
+        (prev_year, prev), (last_year, last) = complete[-2], complete[-1]
+        compare = f"{last_year} 年较 {prev_year} 年"
         if prev > 0:
             pct = (last - prev) / prev * 100
             if pct > 5:
                 direction = f"上升 {pct:.0f}%"
             elif pct < -5:
                 direction = f"下降 {abs(pct):.0f}%"
-            yoy = f"同比 {pct:+.0f}%"
-    return {"peak_period": rows[peak_idx].get("年份", "-"), "peak_value": nums[peak_idx], "direction": direction, "yoy": yoy, "last": nums[-1]}
+            yoy = f"{compare}{direction}（{last:.0f} vs {prev:.0f}）"
+    return {
+        "peak_period": "、".join(peak_years),
+        "peak_value": peak,
+        "peak_years": peak_years,
+        "direction": direction,
+        "yoy": yoy,
+        "compare": compare,
+        "partial_year": partial_year,
+        "partial_value": next((v for y, v in series if y == partial_year), None),
+        "last": nums[-1],
+        "years": len(series),
+    }
 
 
-def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+def _conc_basis(conc: Mapping[str, Any]) -> str:
+    if conc.get("basis") == "returned_rows":
+        return f"（基准为返回的{conc.get('n', 0)}项合计，不是全量）"
+    return ""
+
+
+def _search_relevance_rows(rows: Sequence[Mapping[str, Any]], keyword: str) -> List[Dict[str, Any]]:
+    """Tag search hits by whether the visible title contains the keyword."""
+    token = "".join(str(keyword or "").casefold().split())
+    out = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        item = dict(row)
+        title = "".join(str(item.get("公告标题") or "").casefold().split())
+        item["关键词相关性"] = "标题命中" if token and token in title else "标题未命中（需核对正文）"
+        out.append(item)
+    return out
+
+
+def annotate_search_core(core: Mapping[str, Any], keyword: str) -> Dict[str, Any]:
+    """Attach title-level keyword relevance to an existing search-mode core."""
+    out = dict(core)
+    rows = _search_relevance_rows(core.get("search_records") or [], keyword)
+    out["search_records"] = rows
+    sections = []
+    for spec in core.get("sections") or []:
+        if isinstance(spec, dict) and spec.get("key") == "search_records":
+            hit_n = sum(1 for r in rows if r.get("关键词相关性") == "标题命中")
+            spec = dict(spec)
+            note = str(spec.get("note") or "")
+            # Recompute the relevance clause instead of appending it again on
+            # offline re-review of an already annotated payload.
+            marker = "；标题直接含关键词"
+            if marker in note:
+                note = note.split(marker, 1)[0]
+            spec["note"] = f"{note.strip('；')}；标题直接含关键词 {hit_n} 条，其余需核对正文".strip("；")
+            columns = list(spec.get("columns") or [])
+            if ("关键词相关性", "关键词相关性") not in columns:
+                columns.append(("关键词相关性", "关键词相关性"))
+            spec["columns"] = columns
+        sections.append(spec)
+    out["sections"] = sections
+    return out
+
+
+def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequence[Mapping[str, Any]], as_of_year: Optional[int] = None) -> List[Dict[str, Any]]:
     insights: List[Dict[str, Any]] = []
     metric_map = {m["label"]: str(m["value"]) for m in metrics}
     info_n = metric_map.get("招投标参与记录")
@@ -679,73 +784,122 @@ def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics:
     win_trend = core.get("win_trend") or []
     tender_subj = core.get("tender_subject") or []
     proc_prod = core.get("proc_product") or []
+    search_rows = core.get("search_records") or []
+    sample_n = len(core.get("info_records") or search_rows or [])
+
+    if search_rows:
+        keyword = str(subject.get("match_raw") or subject.get("matchKeyword") or "")
+        hit_n = sum(1 for r in search_rows if r.get("关键词相关性") == "标题命中")
+        titles: Dict[str, int] = {}
+        for r in search_rows:
+            t = str(r.get("公告标题") or "").strip()
+            if t and t != "-":
+                titles[t] = titles.get(t, 0) + 1
+        repeated = sorted(((t, n) for t, n in titles.items() if n > 1), key=lambda x: x[1], reverse=True)
+        if info_n:
+            insights.append({
+                "feature": "检索命中规模",
+                "evidence": f"上游返回关键词“{keyword}”命中 {info_n} 条；本次展示 {sample_n} 条。",
+                "interpretation": "命中数是关键词过滤后的公告条数，不是项目数、企业数或成交数；统计范围以本次检索条件为准。",
+            })
+        insights.append({
+            "feature": "关键词相关性",
+            "evidence": f"本次展示的 {sample_n} 条中，标题直接包含关键词 {hit_n} 条；其余 {sample_n - hit_n} 条仅在正文或其他字段命中，需逐条核对主题。",
+            "interpretation": "标题未命中不等于无关，但也不能仅凭检索命中就认定属于目标主题；引用前应查看公告正文与标的物。",
+        })
+        if repeated:
+            examples = "、".join(f"“{t}”×{n}" for t, n in repeated[:3])
+            insights.append({
+                "feature": "同题记录重复",
+                "evidence": f"展示样本中有 {len(repeated)} 个标题重复出现，例如 {examples}。",
+                "interpretation": "同题记录可能对应不同地区、批次或采购包；不能按标题去重后当作项目数，也不代表同一事件的更高置信度。",
+            })
+        return insights
 
     if info_n:
         insights.append({
             "feature": "招投标活跃度",
-            "evidence": f"企业招投标参与记录 {info_n} 条。",
-            "interpretation": "参与记录数量反映企业在招投标市场的活跃程度；结合角色（招标/中标）可判断其采购与供应角色。",
+            "evidence": f"企业招投标参与记录 {info_n} 条（上游总量）。",
+            "interpretation": "参与记录数量反映企业在招投标市场的收录活跃程度；角色字段来自上游，公告类型与角色不一致时需回看原文。",
         })
     if win_subj:
         conc = _concentration(win_subj, 3)
         if conc:
+            if conc["basis"] == "upstream_share":
+                evidence = f"“{conc['top']}”占全部标的提及约 {conc['top_share']:.1f}%；前 3 类合计 {conc['cr']:.1f}%（CR3，按上游占比合计）。"
+            else:
+                evidence = f"返回的 {conc['n']} 个标的项中，“{conc['top']}”占比约 {conc['top_share']:.0f}%，前 3 类合计 {conc['cr']:.0f}%（CR3，基准为返回项合计）。"
             insights.append({
                 "feature": "中标标的集中度",
-                "evidence": f"“{conc['top']}”占比约 {conc['top_share']:.0f}%，前 3 类合计 {conc['cr']:.0f}%（CR3）。",
-                "interpretation": "中标标的集中度反映企业核心供应能力与主营业务领域；CR3 越高说明业务越聚焦，反之则供应能力更综合。",
+                "evidence": evidence,
+                "interpretation": ("单一标的占比不足 10%，说明返回的标的分布较分散，不能据此认定企业只做某一类工程；"
+                                   if conc["top_share"] < 10 else
+                                   "标的集中度反映企业核心供应能力与主营业务领域；CR3 越高说明业务越聚焦。"),
             })
     if win_area:
         conc = _concentration(win_area, 3)
         if conc:
             insights.append({
                 "feature": "中标区域集中度",
-                "evidence": f"中标区域以“{conc['top']}”为主，占比约 {conc['top_share']:.0f}%，前 3 区域合计 {conc['cr']:.0f}%。",
-                "interpretation": "中标区域集中度反映企业市场覆盖；集中度高代表深耕优势区域，分散则说明全国化布局，但单一区域依赖也存在市场收缩风险。",
+                "evidence": f"返回的 {conc['n']} 个地区中，“{conc['top']}”占比约 {conc['top_share']:.0f}%，前 3 区域合计 {conc['cr']:.0f}%（CR3）；基准为返回地区合计。",
+                "interpretation": "该比例只描述上游返回地区的内部结构；上游未返回全部地区总量时，不能把它当作企业全国市场份额。",
             })
     if win_amount:
         conc = _concentration(win_amount, 2)
         if conc:
             insights.append({
                 "feature": "中标金额区间",
-                "evidence": f"“{conc['top']}”区间中标最多，占比约 {conc['top_share']:.0f}%。",
+                "evidence": f"“{conc['top']}”区间中标最多，占比约 {conc['top_share']:.0f}%{_conc_basis(conc)}。",
                 "interpretation": "中标金额区间反映企业承接项目的规模量级；中大额占比高通常意味着具备承接大型项目的能力。",
             })
     if win_trend:
-        ta = _trend_analysis(win_trend)
+        ta = _trend_analysis(win_trend, as_of_year=as_of_year)
         if ta:
+            peak_text = f"峰值出现在“{ta['peak_period']}”（{ta['peak_value']:.0f} 项）"
+            if len(ta.get("peak_years") or []) > 1:
+                peak_text = f"峰值年度为 {'、'.join(ta['peak_years'])}（各 {ta['peak_value']:.0f} 项）"
+            parts = [peak_text]
+            if ta.get("yoy"):
+                parts.append(ta["yoy"])
+            elif ta.get("partial_year"):
+                parts.append("剔除不完整年度后可用年度不足，未计算同比")
+            else:
+                parts.append("可用年度不足，未计算同比")
+            if ta.get("partial_year"):
+                parts.append(f"{ta['partial_year']} 年为不完整年度（{ta.get('partial_value') or 0:.0f} 条，截至报告生成日），不纳入同比")
             insights.append({
                 "feature": "中标趋势研判",
-                "evidence": f"峰值出现在“{ta['peak_period']}”（{ta['peak_value']:.0f} 项），近年趋势{ta['direction']}，{ta.get('yoy', '')}。",
-                "interpretation": "中标量上升通常意味着市场拓展能力增强、客户认可度提升；下降则可能源于竞争加剧或项目周期性收缩，需结合行业景气度判断。",
+                "evidence": "；".join(parts) + "。",
+                "interpretation": "年度序列来自上游统计口径；最新年度未满全年时下降不等于全年收缩，需结合完整年度和行业景气度判断。",
             })
     if tender_subj:
         conc = _concentration(tender_subj, 2)
         if conc:
+            interp = ("招标标的分布分散，单一标的占比低；不能据此判断企业采购的主攻方向。" if conc["top_share"] < 10
+                      else "招标标的反映企业对外采购的主要方向，可用于供应链分析与寻源参考。")
             insights.append({
                 "feature": "招标需求方向",
-                "evidence": f"招标标的以“{conc['top']}”为主，占比约 {conc['top_share']:.0f}%。",
-                "interpretation": "招标标的反映企业对外采购的主要方向，可用于供应链分析与寻源参考。",
+                "evidence": f"“{conc['top']}”在招标标的中占比约 {conc['top_share']:.1f}%{_conc_basis(conc)}。",
+                "interpretation": interp,
             })
     if proc_prod:
         conc = _concentration(proc_prod, 2)
         if conc:
             insights.append({
                 "feature": "采购产品结构",
-                "evidence": f"采购产品以“{conc['top']}”为主，占比约 {conc['top_share']:.0f}%。",
-                "interpretation": "采购产品结构揭示企业的核心采购品类，结合区域分布可评估供应链布局。",
+                "evidence": f"采购产品以“{conc['top']}”为主，占比约 {conc['top_share']:.0f}%{_conc_basis(conc)}。",
+                "interpretation": "采购产品结构揭示企业的核心采购品类；该分布仅覆盖上游返回项。",
             })
-    # 主要客户/采购方集中度（CR3）— HIGHEST VALUE
     customer_top = core.get("customer_top") or []
     if customer_top:
-        conc = _concentration(customer_top, 3, name_key="客户/采购方", value_key="出现次数")
+        conc = _concentration(customer_top, 3, name_key="客户/采购方", value_key="出现次数", share_key="")
         total_cust = sum(int(r.get("出现次数", 0) or 0) for r in customer_top)
         if conc:
             insights.append({
                 "feature": "主要客户/采购方集中度",
-                "evidence": f"公告中共出现 {len(customer_top)} 家采购方/客户，合计 {total_cust} 次提及；其中“{conc['top']}”提及最多（占比约 {conc['top_share']:.0f}%），前 3 家合计 {conc['cr']:.0f}%（CR3）。",
-                "interpretation": "客户集中度反映企业收入来源的稳定性：集中度高说明核心大客户依赖强、关系稳定，但也存在大客户流失风险；分散则客户基础更广、抗周期能力更强。",
+                "evidence": f"本次展示的 {sample_n} 条记录中出现 {len(customer_top)} 家采购方/客户，合计 {total_cust} 次提及；其中“{conc['top']}”提及最多（占展示提及约 {conc['top_share']:.0f}%），前 3 家合计 {conc['cr']:.0f}%。",
+                "interpretation": "该比例仅描述展示记录中的提及结构，不是企业全量客户收入集中度；采购方名称去重未做主体归并，同名不同主体需核验。",
             })
-    # 中标金额规模洞察
     win_amounts = core.get("win_amounts") or []
     if win_amounts:
         total_amt = sum(win_amounts)
@@ -753,14 +907,14 @@ def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics:
         mx = max(win_amounts)
         insights.append({
             "feature": "中标金额规模",
-            "evidence": f"已命中 {len(win_amounts)} 条中标/候选公告，金额合计 {total_amt:,.2f} 万元，单笔均值 {avg_amt:,.2f} 万元，单笔最高 {mx:,.2f} 万元。",
-            "interpretation": "中标金额规模反映企业承接项目的体量与议价能力；中大额项目占比高通常意味着具备承接大型订单的能力与品牌背书。",
+            "evidence": f"本次展示的 {sample_n} 条记录中，{len(win_amounts)} 条中标/候选公告含金额；合计 {total_amt:,.2f} 万元，单笔均值 {avg_amt:,.2f} 万元，单笔最高 {mx:,.2f} 万元。",
+            "interpretation": "金额只覆盖展示样本中明确返回 projectAmount 的记录；缺失金额不按 0 处理，也不能外推为企业全量中标金额。",
         })
     if not insights:
         insights.append({
             "feature": "数据完整性",
-            "evidence": "部分维度未返回有效数据。",
-            "interpretation": "建议核对匹配关键词是否为企业全称，或检查 MCP 连接与上游数据产品覆盖范围。",
+            "evidence": "本次请求的维度未返回可计算分布的有效记录。",
+            "interpretation": "这表示上游未返回相应数据或当前页为空，不等于企业没有招投标活动；不据此生成业务规模结论。",
         })
     return insights
 
@@ -777,8 +931,12 @@ def build_abstract(subject: Mapping[str, Any], core: Mapping[str, Any], metrics:
 
 def build_abstract_search(search_args: Mapping[str, Any], core: Mapping[str, Any]) -> str:
     kw = search_args.get("matchKeyword") or "全部"
+    rows = core.get("search_records") or []
+    hit_n = sum(1 for r in rows if r.get("关键词相关性") == "标题命中")
     parts = [f"本报告以招投标市场检索为分析对象，关键词为“{kw}”，基于公开招投标公告，呈现按条件命中的招投标明细。"]
-    parts.append("可用于政府采购人员查找合适的招标项目、企业查找投标机会以及分析招投标市场趋势。")
+    if rows:
+        parts.append(f"本次展示 {len(rows)} 条，其中标题直接含关键词 {hit_n} 条。")
+    parts.append("命中数不等于项目数或成交数；标题未命中的记录需结合正文核对主题后再引用。")
     return "".join(parts)
 
 
@@ -796,32 +954,42 @@ def build_dry_run_payload(raw: str, keyword_type: str, search: bool) -> Dict[str
     subject = {**subject, "match_raw": raw, "keywordType": keyword_type}
     core = sample.get("core_analysis") or {}
     metrics = sample.get("metrics") or []
-    return _assemble(subject, core, metrics, dry_run=True, search_mode=search)
+    return apply_content_review(_assemble(subject, core, metrics, dry_run=True, search_mode=search))
 
 
 # --------------------------------------------------------------------------- #
 # Assembly
 # --------------------------------------------------------------------------- #
 
+def _quality_report(core: Mapping[str, Any]) -> Dict[str, Any]:
+    """Section-fill rate from final declared sections and their actual bodies.
+
+    ``0`` is a populated body; None/''/[]/{} is empty. This is not an accuracy
+    score and must not be described as one.
+    """
+    ca = core if isinstance(core, dict) else {}
+    sections = ca.get("sections")
+    if isinstance(sections, list):
+        total = len(sections)
+        populated = sum(1 for s in sections if isinstance(s, dict) and ca.get(s.get("key")) not in (None, "", [], {}))
+    else:
+        keys = [k for k in ca if k not in ("sections", "source_status")]
+        total = len(keys)
+        populated = sum(1 for k in keys if ca.get(k) not in (None, "", [], {}))
+    return {
+        "total_sections": total,
+        "populated_sections": populated,
+        "empty_sections": total - populated,
+        "coverage_pct": round(populated / max(1, total) * 100),
+    }
+
+
 def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequence[Mapping[str, Any]], *, dry_run: bool, search_mode: bool = False, tool_errors: Optional[List[str]] = None) -> Dict[str, Any]:
     abstract = build_abstract(subject, core, metrics) if not search_mode else build_abstract_search(subject, core)
     records = build_records(core)
-    insights = build_insights(subject, core, metrics)
-    # Quality gate: count populated core-analysis sections.
-    ca = core if isinstance(core, dict) else {}
-    secs = ca.get("sections", [])
-    if secs:
-        total_secs = len(secs)
-        populated = sum(1 for s in secs if isinstance(s, dict) and ca.get(s.get("key")) not in (None, "", [], {}))
-    else:
-        total_secs = max(1, len([k for k in ca if k != "sections"]))
-        populated = sum(1 for k in ca if k != "sections" and ca.get(k) not in (None, "", [], {}))
-    quality_report = {
-        "total_sections": total_secs,
-        "populated_sections": populated,
-        "empty_sections": total_secs - populated,
-        "coverage_pct": round(populated / max(1, total_secs) * 100),
-    }
+    insights = build_insights(subject, core, metrics, as_of_year=dt.datetime.now().year)
+    quality_report = _quality_report(core)
+    populated = quality_report["populated_sections"]
     if populated == 0:
         if subject.get("blocked_reason"):
             abstract = f"主体未唯一解析，已停止后续数据产品调用：{subject.get('blocked_reason')}。本报告不包含主体画像或业务结论。"
@@ -858,6 +1026,147 @@ def _assemble(subject: Mapping[str, Any], core: Mapping[str, Any], metrics: Sequ
     }
 
 
+_REVIEW_METRIC_LABELS = {
+    "中标标的数": "中标标的类型数",
+    "招标标的数": "招标标的类型数",
+    "采购产品数": "采购产品类型数",
+    "总中标金额": "展示记录中标金额合计",
+    "平均单笔金额": "展示记录单笔均值",
+    "主要信息类型": "展示记录主要类型",
+    "主要客户/采购方": "展示记录采购方数",
+    "中标地区数": "中标地区项数",
+    "中标年份跨度": "有中标记录年度数",
+    "角色类型数": "展示记录角色类型数",
+}
+_DROP_METRIC_LABELS = {"采购方数"}
+
+
+def _review_metrics(metrics: Sequence[Mapping[str, Any]], core: Mapping[str, Any]) -> List[Dict[str, Any]]:
+    """Relabel sample-scoped metrics without adding or recomputing values."""
+    sample_n = len(core.get("info_records") or core.get("search_records") or [])
+    out: List[Dict[str, Any]] = []
+    seen = set()
+    for raw in metrics:
+        if not isinstance(raw, dict):
+            continue
+        metric = dict(raw)
+        label = str(metric.get("label") or "")
+        if label in _DROP_METRIC_LABELS:
+            continue
+        label = _REVIEW_METRIC_LABELS.get(label, label)
+        metric["label"] = label
+        if label == "中标标的类型数":
+            metric["hint"] = "上游返回的中标标的分布项数，不是中标项目数"
+        elif label == "招标标的类型数":
+            metric["hint"] = "上游返回的招标标的分布项数，不是招标项目数"
+        elif label == "采购产品类型数":
+            metric["hint"] = "上游返回的采购产品分布项数"
+        elif label == "展示记录中标金额合计":
+            metric["hint"] = f"本次展示{sample_n}条中含金额的中标/候选记录合计；不是企业全量中标金额"
+        elif label == "展示记录单笔均值":
+            metric["hint"] = f"本次展示{sample_n}条中含金额记录的算术均值"
+        elif label == "展示记录主要类型":
+            metric["hint"] = f"仅统计本次展示{sample_n}条记录；括号内为该类型条数"
+        elif label == "展示记录采购方数":
+            metric["hint"] = f"本次展示{sample_n}条记录中出现的采购方去重数"
+        elif label == "中标地区项数":
+            metric["hint"] = "上游返回的中标地区分布项数"
+        elif label == "地区CR3":
+            metric["hint"] = "返回地区项内前3合计；基准为返回项合计，不是全量地区"
+        elif label == "有中标记录年度数":
+            metric["hint"] = "上游趋势中出现的年度数，不等同于企业存续年限"
+        elif label == "展示记录角色类型数":
+            metric["hint"] = "仅统计本次展示的招投标明细记录"
+        if label in seen:
+            continue
+        seen.add(label)
+        out.append(metric)
+    return out
+
+
+def apply_content_review(report: Mapping[str, Any], *, source_sha256: Optional[str] = None,
+                         reviewed_at: Optional[str] = None) -> Dict[str, Any]:
+    """Rebuild bidding narrative content offline from an existing report payload.
+
+    Uses only fields already present in the report (core distributions, metrics,
+    subject, generated_at). It never calls the MCP and never adds facts. Fixes:
+    * truncated top-N distributions interpreted as full-population CRn;
+    * year trend compared at the wrong end of a newest-first series and
+      treating the current partial year as a complete year;
+    * sample-only amounts/types/customers presented as enterprise totals;
+    * search hits without a title-level relevance marker.
+    """
+    out = copy.deepcopy(dict(report))
+    core = out.get("core_analysis") or {}
+    subject = out.get("subject") or {}
+    ds = dict(out.get("data_source") or {})
+    if subject.get("blocked_reason") or ds.get("blocked_reason"):
+        ds["quality_report"] = _quality_report(core)
+        ds["content_revision"] = {
+            "mode": "offline_source_preserving",
+            "source_sha256": source_sha256,
+            "original_generated_at": ds.get("generated_at"),
+            "reviewed_at": reviewed_at or dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "scope": "主体未唯一解析/受阻报告：保留原阻断说明与空结果边界，不重算业务结论",
+        }
+        out["data_source"] = ds
+        return out
+    search_mode = bool(ds.get("search_mode")) or bool(core.get("search_records"))
+    generated = str(ds.get("generated_at") or "")
+    try:
+        as_of_year = int(generated[:4]) if generated[:4].isdigit() else dt.datetime.now().year
+    except (ValueError, TypeError):
+        as_of_year = dt.datetime.now().year
+    if search_mode:
+        core = annotate_search_core(core, str(subject.get("match_raw") or subject.get("matchKeyword") or ""))
+    metrics = _review_metrics(out.get("metrics") or [], core)
+    quality = _quality_report(core)
+    if quality["populated_sections"] == 0:
+        # No business body: keep the assembled empty/failure narrative instead
+        # of replacing it with a generic abstract that implies sections exist.
+        out["core_analysis"] = core
+        out["metrics"] = metrics
+        ds["quality_report"] = quality
+        ds["content_revision"] = {
+            "mode": "offline_source_preserving",
+            "source_sha256": source_sha256,
+            "original_generated_at": ds.get("generated_at"),
+            "reviewed_at": reviewed_at or dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "scope": "无有效业务章节：保留原始空结果或调用失败说明，不生成业务结论",
+        }
+        out["data_source"] = ds
+        return out
+    insights = build_insights(subject, core, metrics, as_of_year=as_of_year)
+    abstract = build_abstract_search(subject, core) if search_mode else build_abstract(subject, core, metrics)
+    old_abstract = str(out.get("abstract") or "")
+    marker = "明细含未完整采集的来源"
+    if marker in old_abstract:
+        # attach_pagination() appends this disclosure after the review; keep it
+        # when an already-attached report is reviewed again offline.
+        abstract += old_abstract[old_abstract.index(marker):]
+    out["core_analysis"] = core
+    out["metrics"] = metrics
+    out["insights"] = insights
+    out["abstract"] = abstract
+    out["summary"] = abstract
+    gap_lines = []
+    if ds.get("tool_errors"):
+        gap_lines = ["数据缺口：" + "、".join(str(item) for item in ds["tool_errors"]) + "未成功返回，本报告仅呈现成功维度。"]
+    insight_lines = [item.get("interpretation") for item in insights][:5] or [abstract[:120]]
+    out["executive_summary"] = gap_lines + insight_lines
+    out["representative_records"] = build_records(core)
+    ds["quality_report"] = _quality_report(core)
+    ds["content_revision"] = {
+        "mode": "offline_source_preserving",
+        "source_sha256": source_sha256,
+        "original_generated_at": ds.get("generated_at"),
+        "reviewed_at": reviewed_at or dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+        "scope": "重算口径文案与集中度基准；未新增查询、未改写原始记录字段",
+    }
+    out["data_source"] = ds
+    return out
+
+
 @paid_call_scope
 def build_payload(raw: str, keyword_type: str, info_page_size: int, planned_page_size: int, max_pages: int = 1) -> Dict[str, Any]:
     if isinstance(max_pages, bool) or not isinstance(max_pages, int) or max_pages < 1:
@@ -866,7 +1175,7 @@ def build_payload(raw: str, keyword_type: str, info_page_size: int, planned_page
     if not resolved.get("resolved"):
         subject = build_subject(raw, resolved, keyword_type)
         subject["blocked_reason"] = resolved.get("reason") or "企业主体未唯一解析"
-        return _assemble(subject, build_core_analysis({}, {}, {}, {}, {}), [], dry_run=False)
+        return apply_content_review(_assemble(subject, build_core_analysis({}, {}, {}, {}, {}), [], dry_run=False))
     enterprise = resolved["enterprise"]
     mk_args: Dict[str, Any] = {"matchKeyword": enterprise, "keywordType": keyword_type}
     win = _safe_call(T_WIN_STATS, mk_args)
@@ -889,8 +1198,8 @@ def build_payload(raw: str, keyword_type: str, info_page_size: int, planned_page
     _enrich_metrics_with_profile(metrics, resolved.get("record") if isinstance(resolved, dict) else None)
     # 失败维度只披露安全产品名称，不携带网关错误正文。
     tool_errors = _failed_tools({"中标信息统计": win, "招标信息统计": tender, "采购信息统计": proc, "招投标参与明细": info, "拟建项目": planned})
-    return attach_pagination(_assemble(subject, core, metrics, dry_run=False, tool_errors=tool_errors),
-                             {"招投标参与明细": info, "拟建项目": planned})
+    report = apply_content_review(_assemble(subject, core, metrics, dry_run=False, tool_errors=tool_errors))
+    return attach_pagination(report, {"招投标参与明细": info, "拟建项目": planned})
 
 
 @paid_call_scope
@@ -908,14 +1217,14 @@ def build_search_payload(args: argparse.Namespace) -> Dict[str, Any]:
     search = collect_detail_pages(_safe_call, T_BID_SEARCH, search_args,
                                   get_rows=_first_list, get_total=_safe_total, is_error=_is_api_error,
                                   max_pages=args.max_pages)
-    core = build_core_analysis_search(search)
+    core = annotate_search_core(build_core_analysis_search(search), args.search or "")
     subject = {"enterprise": args.search or "招投标市场", "matchKeyword": args.search, "keywordType": "market_search", "match_raw": args.search or "", "resolved": True, "resolve_reason": "市场检索模式", "filters": search_args}
     metrics: List[Dict[str, Any]] = []
     total = _safe_total(search)
     if total is not None:
         metrics.append({"label": "检索命中", "value": str(total), "hint": "本次检索命中招投标公告数"})
-    return attach_pagination(_assemble(subject, core, metrics, dry_run=False, search_mode=True, tool_errors=_failed_tools({"招投标检索": search})),
-                             {"招投标检索": search})
+    report = apply_content_review(_assemble(subject, core, metrics, dry_run=False, search_mode=True, tool_errors=_failed_tools({"招投标检索": search})))
+    return attach_pagination(report, {"招投标检索": search})
 
 
 # --------------------------------------------------------------------------- #
